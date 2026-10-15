@@ -1,9 +1,10 @@
 from __future__ import annotations
 import os
+import hashlib
 from contextlib import asynccontextmanager
 from pathlib import Path
 from fastapi import FastAPI,Depends,HTTPException,Request
-from fastapi.responses import FileResponse,JSONResponse
+from fastapi.responses import FileResponse,JSONResponse,Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.exceptions import RequestValidationError
@@ -16,8 +17,10 @@ from backend.app.chat import router as chat_router
 from backend.app.documents import router as documents_router
 from backend.app.memory import router as memory_router
 from backend.app.handle import router as handle_router
+from backend.app.monitor import router as monitor_router
 
 def ok(data=None,message='ok'):return {'code':0,'data':data,'message':message}
+BUILD_SIGNATURE=hashlib.sha256(b''.join(p.read_bytes() for p in sorted((db.ROOT/'backend').rglob('*.py')))).hexdigest()[:16]
 
 @asynccontextmanager
 async def lifespan(app):
@@ -31,6 +34,7 @@ app.include_router(chat_router)
 app.include_router(documents_router)
 app.include_router(memory_router)
 app.include_router(handle_router)
+app.include_router(monitor_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:8010','http://localhost:8010'],allow_methods=['GET','POST','DELETE','PATCH'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(HTTPException)
@@ -47,7 +51,7 @@ class LoginInput(BaseModel):
     password:str
 
 @app.get('/api/health')
-def health():return ok({'status':'ok','version':'1.0.0'})
+def health():return ok({'status':'ok','version':'1.0.0','build':BUILD_SIGNATURE})
 
 @app.get('/api/auth/users')
 def identities():return ok(db.rows('SELECT username,display_name,role,employee_no FROM users ORDER BY id'))
@@ -72,7 +76,7 @@ app.mount('/static',StaticFiles(directory=db.ROOT/'frontend'),name='static')
 app.mount('/videos',StaticFiles(directory=db.ROOT/'videos'),name='videos')
 
 @app.get('/favicon.ico',include_in_schema=False)
-def favicon():return JSONResponse(None,status_code=204)
+def favicon():return Response(status_code=204)
 
 @app.get('/api/kb/sources/{sid:int}')
 def source_detail(sid:int,user=Depends(current_user)):

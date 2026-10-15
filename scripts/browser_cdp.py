@@ -49,6 +49,9 @@ class Browser:
         self.screenshot('browser-failure.png')
         raise AssertionError('browser condition timed out: '+expression+' '+str(self.js("({url:location.href,ready:document.readyState,title:document.title,errors:document.body?.textContent.slice(0,300)})"))+' '+str(self.errors))
     def goto(self,url='http://127.0.0.1:8010/'):
+        from server_ready import wait_backend
+        from urllib.parse import urlparse
+        wait_backend(urlparse(url).port or 80)
         self.call('Page.navigate',{'url':url})
         self.wait("document.readyState!=='loading' && typeof doLogin==='function'",timeout=40)
         self.wait("document.querySelector('#lgUser').options[0].value==='AQ20260001'")

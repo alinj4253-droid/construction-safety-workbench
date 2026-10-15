@@ -18,5 +18,7 @@ videos/
 backend/data/
 artifacts/tmp/
 *.log
+Ultralytics/
+artifacts/browser-failure.png
 **/node_modules/
 **/.git/

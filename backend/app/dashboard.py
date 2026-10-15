@@ -6,9 +6,18 @@ from backend.app.security import current_user
 from backend.app.hazards import decorated
 router=APIRouter(prefix='/api/dashboard')
 
+def sync_monitor_stats(c):
+    from collections import Counter
+    day=str(db.today())
+    active=[dict(r) for r in c.execute("SELECT * FROM monitor_snapshots WHERE captured_at LIKE ? AND status<>'dismissed'",(day+'%',))]
+    hours=Counter(s['captured_at'][11:13] for s in active);places=Counter(s['location'] for s in active)
+    peak=hours.most_common(1)[0][0] if hours else None
+    c.execute('INSERT OR IGNORE INTO monitor_stats_daily(date,on_site_count,data_mode) VALUES(?,?,?)',(day,0,'unavailable'))
+    c.execute('UPDATE monitor_stats_daily SET no_helmet_count=?,no_vest_count=?,peak_hour=?,hot_zone=? WHERE date=?',(sum(s['category']=='未戴安全帽' for s in active),sum(s['category']=='未穿反光衣' for s in active),f'{peak}:00–{int(peak)+1:02d}:00' if peak else '暂无数据',places.most_common(1)[0][0] if places else '暂无数据',day))
+
 def monitor_summary():
     day=str(db.today())
-    snaps=db.rows('SELECT * FROM monitor_snapshots WHERE captured_at LIKE ?',(day+'%',))
+    snaps=db.rows("SELECT * FROM monitor_snapshots WHERE captured_at LIKE ? AND status<>'dismissed'",(day+'%',))
     stat=db.one('SELECT * FROM monitor_stats_daily WHERE date=?',(day,)) or {}
     helmet=sum(s['category']=='未戴安全帽' for s in snaps)
     vest=sum(s['category']=='未穿反光衣' for s in snaps)

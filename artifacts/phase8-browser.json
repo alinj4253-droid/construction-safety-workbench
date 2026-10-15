@@ -1,0 +1,13 @@
+{
+  "page": "P4",
+  "result": "通过",
+  "checks": [
+    "人工确认创建轻轨",
+    "驳回不入账",
+    "真实聚合趋势",
+    "四路切换与轮巡",
+    "如实标注演示数据与能力边界"
+  ],
+  "browser_errors": [],
+  "screenshot": "artifacts/p4-monitor.png"
+}
