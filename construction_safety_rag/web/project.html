@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>知识库与系统说明 - 施工安全证据助手</title>
+    <style>
+        :root { --navy:#101b32; --blue:#4a90d9; --ink:#24344d; --muted:#718096; --line:#dfe8f2; --panel:#fff; --bg:#f4f7fb; }
+        * { box-sizing: border-box; }
+        body { margin:0; color:var(--ink); background:var(--bg); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Microsoft YaHei",sans-serif; }
+        .topbar { display:flex; justify-content:space-between; align-items:center; padding:22px 6vw; color:#fff; background:var(--navy); }
+        .topbar h1 { margin:0; font-size:23px; letter-spacing:.02em; }
+        .topbar p { margin:6px 0 0; color:#b8c6de; font-size:13px; }
+        .nav { display:flex; gap:18px; }
+        .nav a { color:#cfe2ff; font-size:13px; text-decoration:none; }
+        .nav a:hover { color:#fff; }
+        main { width:min(1180px,92vw); margin:28px auto 56px; }
+        .hero { padding:30px 34px; border:1px solid var(--line); border-radius:18px; background:linear-gradient(135deg,#fff,#f1f7ff); box-shadow:0 8px 28px rgba(43,76,117,.08); }
+        .eyebrow { color:var(--blue); font-size:12px; font-weight:700; letter-spacing:.14em; }
+        .hero h2 { margin:10px 0 8px; font-size:28px; }
+        .hero p { max-width:800px; margin:0; color:var(--muted); line-height:1.8; }
+        .stats { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-top:25px; }
+        .stat { padding:17px; border:1px solid var(--line); border-radius:12px; background:#fff; }
+        .stat strong { display:block; color:var(--blue); font-size:25px; }
+        .stat span { display:block; margin-top:4px; color:var(--muted); font-size:12px; }
+        .section { margin-top:28px; }
+        .section-head { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:12px; }
+        .section h3 { margin:0; font-size:20px; }
+        .section-head p { margin:0; color:var(--muted); font-size:13px; }
+        .source-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:13px; }
+        .source-card, .rule-card, .model-card { padding:17px; border:1px solid var(--line); border-radius:13px; background:var(--panel); transition:transform .2s,box-shadow .2s; }
+        .source-card:hover, .rule-card:hover, .model-card:hover { transform:translateY(-3px); box-shadow:0 8px 22px rgba(43,76,117,.09); }
+        .source-card h4 { margin:0 0 10px; font-size:14px; line-height:1.5; }
+        .source-card p { margin:4px 0; color:var(--muted); font-size:12px; line-height:1.6; }
+        .source-card a { display:inline-block; margin-top:9px; color:var(--blue); font-size:12px; text-decoration:none; }
+        .source-card a:hover { text-decoration:underline; }
+        .badge { display:inline-block; margin-top:8px; padding:3px 7px; border-radius:10px; color:#347454; background:#e8f7ee; font-size:11px; }
+        .badge.off { color:#98702a; background:#fff4d8; }
+        .rule-grid, .model-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:13px; }
+        .rule-card .num { display:inline-flex; align-items:center; justify-content:center; width:27px; height:27px; border-radius:50%; color:#fff; background:var(--blue); font-weight:700; }
+        .rule-card h4, .model-card h4 { margin:12px 0 6px; font-size:15px; }
+        .rule-card p, .model-card p { margin:0; color:var(--muted); font-size:13px; line-height:1.75; }
+        .flow { display:flex; align-items:stretch; gap:0; overflow-x:auto; padding:10px 2px 18px; }
+        .flow-step { position:relative; min-width:145px; padding:17px 14px; border:1px solid #cfe0f2; border-radius:13px; background:#fff; text-align:center; animation:float-in .5s both; }
+        .flow-step:nth-child(2){animation-delay:.08s}.flow-step:nth-child(3){animation-delay:.16s}.flow-step:nth-child(4){animation-delay:.24s}.flow-step:nth-child(5){animation-delay:.32s}.flow-step:nth-child(6){animation-delay:.4s}.flow-step:nth-child(7){animation-delay:.48s}
+        .flow-step:not(:last-child)::after { content:'→'; position:absolute; right:-24px; top:27px; z-index:2; color:var(--blue); font-size:22px; font-weight:700; }
+        .flow-step:not(:last-child) { margin-right:28px; }
+        .flow-step b { display:block; color:#2d6eae; font-size:14px; }
+        .flow-step span { display:block; margin-top:8px; color:var(--muted); font-size:11px; line-height:1.5; }
+        .note { margin-top:22px; padding:15px 18px; border-left:4px solid #8db9e9; border-radius:8px; color:#66758a; background:#edf5ff; font-size:13px; line-height:1.7; }
+        footer { margin-top:32px; color:#97a3b3; font-size:12px; text-align:center; }
+        @keyframes float-in { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @media (max-width:800px) { .topbar{align-items:flex-start;gap:16px;flex-direction:column}.stats,.rule-grid,.model-grid{grid-template-columns:repeat(2,1fr)}.source-grid{grid-template-columns:1fr}.hero{padding:24px}.flow{padding-bottom:24px} }
+        @media (max-width:500px) { .stats,.rule-grid,.model-grid{grid-template-columns:1fr}.topbar{padding:18px 5vw} main{width:90vw}.hero h2{font-size:23px} }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div><h1>施工安全证据助手</h1><p>知识库、Chunk 规则与 RAG 系统说明</p></div>
+        <nav class="nav"><a href="/">返回问答</a><a href="/graph">知识图谱</a></nav>
+    </header>
+    <main>
+        <section class="hero">
+            <div class="eyebrow">PROJECT OVERVIEW</div>
+            <h2>让每个回答都能回到施工安全资料</h2>
+            <p>系统将官方法规、住建部门文件、福建省施工安全政策和公开标准文本清洗成可检索知识片段，再结合 BM25、向量检索和知识图谱，为法规查询、隐患解释和整改复查提供带来源的回答。</p>
+            <div class="stats">
+                <div class="stat"><strong id="stat-sources">18</strong><span>已处理资料</span></div>
+                <div class="stat"><strong id="stat-chunks">446</strong><span>知识片段 Chunk</span></div>
+                <div class="stat"><strong id="stat-entities">1456</strong><span>知识图谱实体</span></div>
+                <div class="stat"><strong id="stat-relations">3495</strong><span>知识图谱关系</span></div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head"><div><h3>知识库原始资料</h3><p>点击“打开原文”可以访问来源网页或公开文件。</p></div></div>
+            <div class="source-grid" id="source-grid"><div class="source-card"><h4>正在加载资料清单…</h4><p>系统会从本地知识库读取来源信息。</p></div></div>
+        </section>
+
+        <section class="section">
+            <div class="section-head"><div><h3>Chunk 切分规则</h3><p>保留条款上下文，同时控制送入检索和生成阶段的文本规模。</p></div></div>
+            <div class="rule-grid">
+                <article class="rule-card"><span class="num">1</span><h4>清洗文本</h4><p>解析网页和 PDF，去除脚本、样式和多余空白，保留法规正文与来源元数据。</p></article>
+                <article class="rule-card"><span class="num">2</span><h4>句子边界切分</h4><p>优先按句号、问号、感叹号、分号等边界切分，避免从条款中间截断。</p></article>
+                <article class="rule-card"><span class="num">3</span><h4>650 字目标长度</h4><p>单个片段目标上限约 650 字；遇到无标点超长段落时按目标长度硬切。</p></article>
+                <article class="rule-card"><span class="num">4</span><h4>100 字重叠窗口</h4><p>相邻片段保留约 100 字重叠，让跨段的责任主体、条件和整改要求保持连续。</p></article>
+                <article class="rule-card"><span class="num">5</span><h4>来源元数据</h4><p>每个 Chunk 保留法规名称、发布部门、文号、生效状态、原文链接和片段编号。</p></article>
+                <article class="rule-card"><span class="num">6</span><h4>可追溯引用</h4><p>回答会返回命中的资料名称和片段编号，便于答辩时回到原文核对。</p></article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head"><div><h3>检索与生成技术</h3><p>当前页面只展示关键技术点，详细运行过程见下方流程。</p></div></div>
+            <div class="model-grid">
+                <article class="model-card"><h4>Dense 检索</h4><p>使用本地 256 维哈希词/二元词向量，适合捕捉问题和条款之间的词语组合相似性。</p></article>
+                <article class="model-card"><h4>BM25 稀疏检索</h4><p>根据关键词在资料中的词频、逆文档频率和文档长度进行匹配，适合法规名称、文号和条款关键词。</p></article>
+                <article class="model-card"><h4>Weighted RRF</h4><p>融合 Dense、BM25、实体图谱和关系图谱结果，当前权重为 0.5、0.3、0.2、0.2。</p></article>
+                <article class="model-card"><h4>Agentic RAG</h4><p>复用原 RAG 的查询分析、检索路由、Evidence Judge、有限重试和流式生成链路。</p></article>
+                <article class="model-card"><h4>LLM 生成</h4><p>支持 OpenAI 兼容 API 流式生成；接口不可用时，使用命中的检索证据进行本地兜底。</p></article>
+                <article class="model-card"><h4>会话记忆</h4><p>使用 SQLite 保存会话和消息，通过近期对话窗口与滚动摘要支持多轮追问。</p></article>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="section-head"><div><h3>完整 RAG 逻辑链</h3><p>这部分作为答辩时的系统流程说明，不干扰当前问答页面。</p></div></div>
+            <div class="flow">
+                <div class="flow-step"><b>原始资料</b><span>官方网页 / PDF</span></div>
+                <div class="flow-step"><b>清洗切分</b><span>文本规范化<br>650 字 + 100 字重叠</span></div>
+                <div class="flow-step"><b>索引构建</b><span>Dense / BM25<br>实体与关系图谱</span></div>
+                <div class="flow-step"><b>问题理解</b><span>查询改写<br>模式路由</span></div>
+                <div class="flow-step"><b>证据检索</b><span>多路召回<br>Weighted RRF</span></div>
+                <div class="flow-step"><b>证据判断</b><span>Evidence Judge<br>有限重试</span></div>
+                <div class="flow-step"><b>答案输出</b><span>流式生成<br>引用来源</span></div>
+            </div>
+        </section>
+        <footer>施工安全证据助手 · 知识库与系统说明</footer>
+    </main>
+    <script>
+        async function loadInfo() {
+            try {
+                const response = await fetch('/api/project-info');
+                const info = await response.json();
+                const stats = info.stats || {};
+                for (const [id, key] of [['stat-sources','sources'],['stat-chunks','chunks'],['stat-entities','entities'],['stat-relations','relations']]) {
+                    if (stats[key]) document.getElementById(id).textContent = stats[key];
+                }
+                const grid = document.getElementById('source-grid');
+                grid.innerHTML = '';
+                (info.sources || []).forEach(source => {
+                    const card = document.createElement('article');
+                    card.className = 'source-card';
+                    const status = source.downloaded ? '已纳入知识库' : '目录记录，未下载';
+                    card.innerHTML = `<h4>${escapeHtml(source.title)}</h4><p>${escapeHtml(source.issuer || '')}</p><p>${escapeHtml(source.document_no || '')} · ${escapeHtml(source.status || '')}</p><span class="badge ${source.downloaded ? '' : 'off'}">${status}</span><br><a href="${escapeAttr(source.url)}" target="_blank" rel="noopener">打开原文 ↗</a>`;
+                    grid.appendChild(card);
+                });
+            } catch (error) {
+                document.getElementById('source-grid').innerHTML = '<div class="source-card"><h4>资料清单暂时无法加载</h4><p>本地问答和知识图谱不受影响。</p></div>';
+            }
+        }
+        function escapeHtml(value) { return String(value).replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[ch])); }
+        function escapeAttr(value) { return escapeHtml(value).replace(/`/g, '&#096;'); }
+        loadInfo();
+    </script>
+</body>
+</html>
+

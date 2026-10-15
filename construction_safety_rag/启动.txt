@@ -1,0 +1,31 @@
+施工安全证据助手 RAG 启动说明
+
+1. 打开 PowerShell，进入本目录：
+   cd D:\Desktop\ProfPractice\construction_safety_rag
+
+2. 首次运行安装依赖：
+   python -m pip install -r requirements.txt
+
+3. 下载并处理官方资料（网络可用时执行）：
+   python scripts\fetch_sources.py
+   python scripts\build_kb.py
+
+4. 启动本地 API（推荐双击同目录下的“启动.bat”，不要关闭弹出的命令行窗口）：
+   python -m uvicorn app.api:app --host 127.0.0.1 --port 8010
+
+5. 浏览器打开问答前端：
+   http://127.0.0.1:8010/
+
+   API 文档：
+   http://127.0.0.1:8010/docs
+
+   知识图谱：
+   http://127.0.0.1:8010/graph
+
+如果浏览器显示 ERR_CONNECTION_REFUSED，说明 API 进程已经退出或命令行窗口被关闭。重新双击“启动.bat”即可。
+
+6. 示例请求：
+   POST /api/chat
+   {"message":"安全帽佩戴的法规依据是什么？"}
+
+如果没有配置大模型 API，系统仍可以使用本地混合检索和模板化证据答案；配置 .env 后，网页问答和 `/api/chat` 会自动调用 OpenAI 兼容模型生成更完整的解释。若要强制关闭模型调用，可设置 `RAG_USE_LLM=false`。

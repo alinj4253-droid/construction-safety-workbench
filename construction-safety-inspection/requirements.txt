@@ -1,0 +1,13 @@
+# 计算机视觉（GPU 版 torch 请按官方指引安装，见 README）
+torch>=2.0
+torchvision
+ultralytics>=8.3
+# 界面
+gradio>=4.0
+# 结果视频转码为浏览器可播的 H.264（自带静态 ffmpeg 二进制）
+imageio-ffmpeg>=0.5
+# 大模型 Agent
+openai>=1.30
+python-dotenv>=1.0
+# 测试
+pytest>=8.0

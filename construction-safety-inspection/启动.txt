@@ -1,0 +1,2 @@
+双击  D:\Desktop\ProfPractice\construction-safety-inspection\run.bat
+→ 浏览器自动打开 http://127.0.0.1:7860
