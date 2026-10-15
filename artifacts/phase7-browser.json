@@ -1,0 +1,14 @@
+{
+  "page": "P3",
+  "result": "通过",
+  "checks": [
+    "双轨筛选与计数",
+    "登记接口复用",
+    "催办留痕",
+    "详情证据链",
+    "填写复查意见并销项",
+    "CSV与Excel筛选导出(API)"
+  ],
+  "browser_errors": [],
+  "screenshot": "artifacts/p3-ledger.png"
+}
