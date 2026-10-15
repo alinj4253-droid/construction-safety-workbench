@@ -2,6 +2,8 @@ import json
 import time
 from pathlib import Path
 import httpx
+from scripts.server_ready import wait_backend
+wait_backend(8010)
 with httpx.Client(base_url='http://127.0.0.1:8010',timeout=60) as c:
     token=c.post('/api/auth/login',json={'username':'AQ20260001','password':'123456'}).json()['data']['token']
     c.headers['Authorization']='Bearer '+token

@@ -7,11 +7,12 @@
     "人工签发二次确认",
     "签发不重复新增隐患",
     "保存草稿",
+    "复制到实际剪贴板",
     "提交实际整改反馈",
     "无复核通过误导文案"
   ],
-  "hazard_id": 9,
-  "document_id": 11,
+  "hazard_id": 19,
+  "document_id": 21,
   "browser_errors": [],
   "screenshot": "artifacts/p6-handling.png"
 }

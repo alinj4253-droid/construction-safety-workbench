@@ -1,0 +1,15 @@
+{
+  "installed": "D:\\Desktop\\ProfPractice\\backend\\data\\app.db",
+  "clean_seed": true,
+  "counts": {
+    "hazards": 6,
+    "documents": 0,
+    "chat_sessions": 0,
+    "monitor_snapshots": 4,
+    "kb_sources": 76,
+    "kb_chunks": 2745
+  },
+  "integrity": "ok",
+  "foreign_keys": "ok",
+  "prior_qa_archive": "D:\\Desktop\\ProfPractice\\backend\\data\\test_archive\\app-before-delivery.db"
+}

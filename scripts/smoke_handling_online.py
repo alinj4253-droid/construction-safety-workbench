@@ -3,6 +3,8 @@ import time
 from datetime import date,timedelta
 from pathlib import Path
 import httpx
+from scripts.server_ready import wait_backend
+wait_backend(8010)
 with httpx.Client(base_url='http://127.0.0.1:8010',timeout=60) as c:
     token=c.post('/api/auth/login',json={'username':'AQ20260001','password':'123456'}).json()['data']['token'];c.headers['Authorization']='Bearer '+token
     h=c.post('/api/hazards',json={'title':'接口验收 5#楼临边防护缺失，坠落高度3m','description':'安全员现场人工确认，5#楼二层临边防护栏杆缺失，坠落高度3m。','location':'5#楼二层','track':'heavy','responsible_team':'验收木工班组','responsible_person':'验收责任人','deadline':str(date.today()+timedelta(days=3))}).json()['data']

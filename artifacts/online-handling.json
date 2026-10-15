@@ -1,20 +1,20 @@
 {
-  "task_id": "0b4499b37b1545d198cd12e3308a7e84",
-  "hazard_id": 7,
+  "task_id": "6eb11378b4324415b5a154f1410fc6af",
+  "hazard_id": 8,
   "status": "pending_human",
-  "document_id": 1,
+  "document_id": 2,
   "steps": [
     {
       "name": "检索规范原文",
-      "time": "2026-10-15T23:16:29+08:00",
+      "time": "2026-10-15T23:57:15+08:00",
       "payload": {
         "evidence": [
           {
-            "chunk_id": "a360bc3f7719c7cc4d61a46c",
+            "chunk_id": "bae8ff114dcb31ce9e7af946",
             "source_id": 19,
-            "section": "4.1.1",
-            "text": "坠落高度基准面2m及以上进行临边作业时，应在临空一侧设置防护栏杆，并应采用密目式安全立网或工具式栏板封闭。",
-            "page": 13,
+            "section": "4.3.1",
+            "text": "临边作业的防护栏杆应由横杆、立杆及挡脚板组成，防护栏杆应符合下列规定：1 防护栏杆应为两道横杆，上杆距地面高度应为1.2m，下杆应在上杆和挡脚板中间设置；2 当防护栏杆高度大于1.2m时，应增设横杆，横杆间距不应大于600mm；3 防护栏杆立杆间距不应大于2m；4 挡脚板高度不应小于180mm。",
+            "page": 14,
             "name": "建筑施工高处作业安全技术规范",
             "doc_no": "JGJ80-2016",
             "region": "国家",
@@ -26,14 +26,17 @@
             "content_kind": "全文/正文",
             "file_path": "施工安全RAG知识源\\知识源\\02_施工安全技术标准\\JGJ80-2016_att1.pdf",
             "effective_date": "2016-11-01",
-            "score": 0.01639344,
+            "chunk_active": 1,
+            "chunk_legal_status": "现行",
+            "chunk_note": "正文已解析",
+            "score": 0.01527972,
             "citation_eligible": true,
             "display_status": "现行"
           }
         ],
         "facts": {
-          "id": 7,
-          "code": "HZ-20261015-96D3C9E4",
+          "id": 8,
+          "code": "HZ-20261015-A369C324",
           "title": "接口验收 5#楼临边防护缺失，坠落高度3m",
           "category": "现场隐患",
           "location": "5#楼二层",
@@ -48,8 +51,8 @@
           "rectify_note": null,
           "review_note": null,
           "created_by": 1,
-          "created_at": "2026-10-15T23:16:29+08:00",
-          "confirmed_at": "2026-10-15T23:16:29+08:00",
+          "created_at": "2026-10-15T23:57:14+08:00",
+          "confirmed_at": "2026-10-15T23:57:14+08:00",
           "closed_at": null,
           "version": 1,
           "overdue": false,
@@ -61,7 +64,7 @@
     },
     {
       "name": "Agent A 起草",
-      "time": "2026-10-15T23:16:38+08:00",
+      "time": "2026-10-15T23:57:22+08:00",
       "payload": {
         "version": 1,
         "draft": {
@@ -71,18 +74,18 @@
           "responsible_team": "验收木工班组",
           "responsible_person": "验收责任人",
           "deadline": "2026-10-18",
-          "body": "已登记隐患：安全员现场人工确认，5#楼二层临边防护栏杆缺失，坠落高度3m。\n\n整改要求：请责任班组结合现场情况，按照下列原文及已批准的专项方案组织整改。具体措施需安全员核对适用条件。整改完成后提交实际整改情况及证据，由安全员现场复查，未复查合格不得销项。\n\n依据原文（JGJ80-2016 第4.1.1条）：坠落高度基准面2m及以上进行临边作业时，应在临空一侧设置防护栏杆，并应采用密目式安全立网或工具式栏板封闭。",
+          "body": "已登记隐患：安全员现场人工确认，5#楼二层临边防护栏杆缺失，坠落高度3m。\n\n整改要求：请责任班组结合现场情况，按照下列原文及已批准的专项方案组织整改。具体措施需安全员核对适用条件。整改完成后提交实际整改情况及证据，由安全员现场复查，未复查合格不得销项。\n\n依据原文：临边作业的防护栏杆应由横杆、立杆及挡脚板组成，防护栏杆应符合下列规定：1 防护栏杆应为两道横杆，上杆距地面高度应为1.2m，下杆应在上杆和挡脚板中间设置；2 当防护栏杆高度大于1.2m时，应增设横杆，横杆间距不应大于600mm；3 防护栏杆立杆间距不应大于2m；4 挡脚板高度不应小于180mm。",
           "evidence_ids": [
-            "a360bc3f7719c7cc4d61a46c"
+            "bae8ff114dcb31ce9e7af946"
           ]
         },
         "evidence": [
           {
-            "chunk_id": "a360bc3f7719c7cc4d61a46c",
+            "chunk_id": "bae8ff114dcb31ce9e7af946",
             "source_id": 19,
-            "section": "4.1.1",
-            "text": "坠落高度基准面2m及以上进行临边作业时，应在临空一侧设置防护栏杆，并应采用密目式安全立网或工具式栏板封闭。",
-            "page": 13,
+            "section": "4.3.1",
+            "text": "临边作业的防护栏杆应由横杆、立杆及挡脚板组成，防护栏杆应符合下列规定：1 防护栏杆应为两道横杆，上杆距地面高度应为1.2m，下杆应在上杆和挡脚板中间设置；2 当防护栏杆高度大于1.2m时，应增设横杆，横杆间距不应大于600mm；3 防护栏杆立杆间距不应大于2m；4 挡脚板高度不应小于180mm。",
+            "page": 14,
             "name": "建筑施工高处作业安全技术规范",
             "doc_no": "JGJ80-2016",
             "region": "国家",
@@ -94,7 +97,10 @@
             "content_kind": "全文/正文",
             "file_path": "施工安全RAG知识源\\知识源\\02_施工安全技术标准\\JGJ80-2016_att1.pdf",
             "effective_date": "2016-11-01",
-            "score": 0.01639344,
+            "chunk_active": 1,
+            "chunk_legal_status": "现行",
+            "chunk_note": "正文已解析",
+            "score": 0.01527972,
             "citation_eligible": true,
             "display_status": "现行"
           }
@@ -102,11 +108,11 @@
         "model": {
           "mode": "online",
           "model": "deepseek-v4.1-flash",
-          "seconds": 8.297,
+          "seconds": 6.609,
           "usage": {
-            "prompt_tokens": 794,
-            "completion_tokens": 236,
-            "total_tokens": 1030,
+            "prompt_tokens": 884,
+            "completion_tokens": 288,
+            "total_tokens": 1172,
             "prompt_tokens_details": {
               "cached_tokens": 0
             },
@@ -120,7 +126,7 @@
     },
     {
       "name": "程序规则校验",
-      "time": "2026-10-15T23:16:38+08:00",
+      "time": "2026-10-15T23:57:22+08:00",
       "payload": {
         "issues": [],
         "round": 1
@@ -128,7 +134,7 @@
     },
     {
       "name": "Agent B 独立复核",
-      "time": "2026-10-15T23:16:45+08:00",
+      "time": "2026-10-15T23:57:32+08:00",
       "payload": {
         "round": 1,
         "issues": [],
@@ -136,11 +142,11 @@
         "model": {
           "mode": "online",
           "model": "doubao-seed-2-1-turbo-260628",
-          "seconds": 7.625,
+          "seconds": 10.141,
           "usage": {
             "completion_tokens": 5,
-            "prompt_tokens": 947,
-            "total_tokens": 952,
+            "prompt_tokens": 1073,
+            "total_tokens": 1078,
             "prompt_tokens_details": {
               "cached_tokens": 0
             },
@@ -153,7 +159,7 @@
     },
     {
       "name": "等待人工确认签发",
-      "time": "2026-10-15T23:16:45+08:00",
+      "time": "2026-10-15T23:57:32+08:00",
       "payload": {
         "conclusion": "AI 检查未发现阻断问题，待人工确认"
       }
@@ -161,20 +167,20 @@
   ],
   "reviews": [
     {
-      "id": 1,
-      "document_id": 1,
+      "id": 3,
+      "document_id": 2,
       "round": 1,
       "reviewer": "规则校验",
       "result_json": "{\"issues\": [], \"model\": {\"mode\": \"rules\"}}",
-      "created_at": "2026-10-15T23:16:45+08:00"
+      "created_at": "2026-10-15T23:57:32+08:00"
     },
     {
-      "id": 2,
-      "document_id": 1,
+      "id": 4,
+      "document_id": 2,
       "round": 1,
       "reviewer": "Agent B",
-      "result_json": "{\"issues\": [], \"model\": {\"mode\": \"online\", \"model\": \"doubao-seed-2-1-turbo-260628\", \"seconds\": 7.625, \"usage\": {\"completion_tokens\": 5, \"prompt_tokens\": 947, \"total_tokens\": 952, \"prompt_tokens_details\": {\"cached_tokens\": 0}, \"completion_tokens_details\": {\"reasoning_tokens\": 0}}}}",
-      "created_at": "2026-10-15T23:16:45+08:00"
+      "result_json": "{\"issues\": [], \"model\": {\"mode\": \"online\", \"model\": \"doubao-seed-2-1-turbo-260628\", \"seconds\": 10.141, \"usage\": {\"completion_tokens\": 5, \"prompt_tokens\": 1073, \"total_tokens\": 1078, \"prompt_tokens_details\": {\"cached_tokens\": 0}, \"completion_tokens_details\": {\"reasoning_tokens\": 0}}}}",
+      "created_at": "2026-10-15T23:57:32+08:00"
     }
   ]
 }

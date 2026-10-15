@@ -24,7 +24,7 @@ def monitor_summary():
     times=__import__('collections').Counter(s['captured_at'][11:13] for s in snaps)
     places=__import__('collections').Counter(s['location'] for s in snaps)
     peak=times.most_common(1)[0][0] if times else None
-    return {'on_site':stat.get('on_site_count',0),'violations':len(snaps),'no_helmet':helmet,'no_vest':vest,'pending':sum(s['status']=='pending' for s in snaps),'peak_hour':f'{peak}:00–{int(peak)+1:02d}:00' if peak else '暂无数据','hot_zone':places.most_common(1)[0][0] if places else '暂无数据','data_mode':stat.get('data_mode','unavailable'),'trend':[{'hour':h,'count':sum(s['category']=='未戴安全帽' and s['captured_at'][11:13]==f'{h:02d}' for s in snaps)} for h in range(7,19)]}
+    return {'on_site':stat.get('on_site_count',0),'violations':len(snaps),'no_helmet':helmet,'no_vest':vest,'pending':db.one("SELECT count(*) n FROM monitor_snapshots WHERE status='pending'")['n'],'peak_hour':f'{peak}:00–{int(peak)+1:02d}:00' if peak else '暂无数据','hot_zone':places.most_common(1)[0][0] if places else '暂无数据','data_mode':stat.get('data_mode','unavailable'),'trend':[{'hour':h,'count':sum(s['category']=='未戴安全帽' and s['captured_at'][11:13]==f'{h:02d}' for s in snaps)} for h in range(24)]}
 
 @router.get('/summary')
 def summary(user=Depends(current_user)):

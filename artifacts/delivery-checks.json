@@ -1,0 +1,8 @@
+{
+  "credential_in_tracked_files_or_history": false,
+  "credential_leak_paths": [],
+  "env_ignored": true,
+  "prototype_unchanged": true,
+  "gitlinks": [],
+  "tracked_files": 361
+}

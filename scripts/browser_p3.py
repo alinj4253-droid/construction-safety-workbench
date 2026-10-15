@@ -14,9 +14,12 @@ try:
     assert b.js("document.getElementById('mBody').textContent.includes('全程留痕')")
     b.js("closeModal();hazardAction(1,'urge','浏览器验收催办')")
     b.js('viewHazard(1)');assert b.js("document.getElementById('mBody').textContent.includes('浏览器验收催办')")
-    b.js('closeModal();openReview(2)');b.fill('#reviewNote','浏览器验收复查：现场整改合格')
-    b.js("hazardAction(2,'review_close',document.getElementById('reviewNote').value)")
-    b.wait("HZ.find(h=>h.id===2)?.status==='已销项'")
+    h=b.js("api('/api/hazards','POST',{title:'浏览器复查验收，临边防护缺失',track:'heavy'})")
+    hid=h['id'];b.js(f"hazardAction({hid},'start_rectify');")
+    b.js(f"hazardAction({hid},'submit_rectify','浏览器验收整改完成')")
+    b.js(f'closeModal();openReview({hid})');b.fill('#reviewNote','浏览器验收复查：现场整改合格')
+    b.js(f"hazardAction({hid},'review_close',document.getElementById('reviewNote').value)")
+    b.wait(f"HZ.find(h=>h.id==={hid})?.status==='已销项'")
     assert not b.errors,b.errors
     result={'page':'P3','result':'通过','checks':['双轨筛选与计数','登记接口复用','催办留痕','详情证据链','填写复查意见并销项','CSV与Excel筛选导出(API)'],'browser_errors':b.errors,'screenshot':'artifacts/p3-ledger.png'}
     (ROOT/'artifacts/phase7-browser.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(result,ensure_ascii=False))

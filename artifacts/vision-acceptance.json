@@ -1,0 +1,160 @@
+{
+  "real_inference": {
+    "id": "32535b6d8b2b41d4a1c3a4ce8b1d4e6f",
+    "camera_id": "CAM-03",
+    "status": "done",
+    "error": null,
+    "created_by": 1,
+    "created_at": "2026-10-15T23:35:34+08:00",
+    "finished_at": "2026-10-15T23:35:39+08:00",
+    "result": {
+      "camera_id": "CAM-03",
+      "frames": [
+        {
+          "id": 17,
+          "media_time": 0.0,
+          "helmet_on": 2,
+          "helmet_off": 2
+        },
+        {
+          "id": 18,
+          "media_time": 0.984,
+          "helmet_on": 2,
+          "helmet_off": 1
+        },
+        {
+          "id": 19,
+          "media_time": 1.969,
+          "helmet_on": 0,
+          "helmet_off": 1
+        },
+        {
+          "id": 20,
+          "media_time": 2.953,
+          "helmet_on": 1,
+          "helmet_off": 2
+        },
+        {
+          "id": 21,
+          "media_time": 3.937,
+          "helmet_on": 0,
+          "helmet_off": 2
+        },
+        {
+          "id": 22,
+          "media_time": 4.922,
+          "helmet_on": 1,
+          "helmet_off": 1
+        },
+        {
+          "id": 23,
+          "media_time": 5.906,
+          "helmet_on": 0,
+          "helmet_off": 1
+        },
+        {
+          "id": 24,
+          "media_time": 6.89,
+          "helmet_on": 1,
+          "helmet_off": 1
+        }
+      ],
+      "snapshot_ids": [
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12,
+        13,
+        14
+      ],
+      "new_clues": 10,
+      "semantics": "同一片段局部轨迹去重；不识别人员身份，不推算全场在场人数",
+      "model": "本地YOLO11n安全帽权重"
+    }
+  },
+  "repeat_same_clip": {
+    "id": "b802928631ee4df480b3cc5617fe155e",
+    "camera_id": "CAM-03",
+    "status": "done",
+    "error": null,
+    "created_by": 1,
+    "created_at": "2026-10-15T23:38:51+08:00",
+    "finished_at": "2026-10-15T23:38:52+08:00",
+    "result": {
+      "camera_id": "CAM-03",
+      "frames": [
+        {
+          "id": 25,
+          "media_time": 0.0,
+          "helmet_on": 2,
+          "helmet_off": 2
+        },
+        {
+          "id": 26,
+          "media_time": 0.984,
+          "helmet_on": 2,
+          "helmet_off": 1
+        },
+        {
+          "id": 27,
+          "media_time": 1.969,
+          "helmet_on": 0,
+          "helmet_off": 1
+        },
+        {
+          "id": 28,
+          "media_time": 2.953,
+          "helmet_on": 1,
+          "helmet_off": 2
+        },
+        {
+          "id": 29,
+          "media_time": 3.937,
+          "helmet_on": 0,
+          "helmet_off": 2
+        },
+        {
+          "id": 30,
+          "media_time": 4.922,
+          "helmet_on": 1,
+          "helmet_off": 1
+        },
+        {
+          "id": 31,
+          "media_time": 5.906,
+          "helmet_on": 0,
+          "helmet_off": 1
+        },
+        {
+          "id": 32,
+          "media_time": 6.89,
+          "helmet_on": 1,
+          "helmet_off": 1
+        }
+      ],
+      "snapshot_ids": [],
+      "new_clues": 0,
+      "semantics": "同一片段局部轨迹去重；不识别人员身份，不推算全场在场人数",
+      "model": "本地YOLO11n安全帽权重"
+    }
+  },
+  "actual_yolo_clues_stored": 10,
+  "cache": [
+    {
+      "date": "2026-10-15",
+      "on_site_count": 87,
+      "no_helmet_count": 11,
+      "no_vest_count": 0,
+      "peak_hour": "23:00–24:00",
+      "hot_zone": "3#楼二层作业面",
+      "data_mode": "demo"
+    }
+  ],
+  "deduplication_passed": true,
+  "limitation": "抓拍包含误报可能，10条为局部轨迹线索，不代表10个唯一人员。所有真实抓拍先待核实，未经人工确认不入台账。",
+  "sample_image": "artifacts/vision-frame.jpg"
+}

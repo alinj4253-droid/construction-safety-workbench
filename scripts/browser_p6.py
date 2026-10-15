@@ -14,6 +14,9 @@ try:
     assert b.js("p6Task.steps.some(s=>s.name==='Agent B 独立复核')")
     b.screenshot('p6-handling.png')
     did=b.js('p6Task.document_id');b.js('saveDraft('+str(did)+')')
+    b.call('Browser.grantPermissions',{'permissions':['clipboardReadWrite','clipboardSanitizedWrite'],'origin':'http://127.0.0.1:8011'})
+    b.call('Emulation.setFocusEmulationEnabled',{'enabled':True})
+    b.js('p6Copy()');copied=b.js('navigator.clipboard.readText()');assert '临边防护缺失' in copied
     before=b.js("api('/api/hazards').then(d=>d.counts.all)")
     b.js('p6Sign()');assert b.js("document.getElementById('mTitle').textContent==='人工确认签发'")
     b.js('issuePendingDocument('+str(did)+')');b.wait("p6Task?.status==='issued'")
@@ -22,6 +25,6 @@ try:
     b.js(f"hazardAction({hid},'submit_rectify',document.getElementById('feedbackNote').value)")
     b.wait("p6Hazard.status==='待复查'")
     assert not b.errors,b.errors
-    result={'page':'P6','result':'通过','checks':['真实双角色交接','规则与复核意见落库','人工签发二次确认','签发不重复新增隐患','保存草稿','提交实际整改反馈','无复核通过误导文案'],'hazard_id':hid,'document_id':did,'browser_errors':b.errors,'screenshot':'artifacts/p6-handling.png'}
+    result={'page':'P6','result':'通过','checks':['真实双角色交接','规则与复核意见落库','人工签发二次确认','签发不重复新增隐患','保存草稿','复制到实际剪贴板','提交实际整改反馈','无复核通过误导文案'],'hazard_id':hid,'document_id':did,'browser_errors':b.errors,'screenshot':'artifacts/p6-handling.png'}
     (ROOT/'artifacts/phase6-browser.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(result,ensure_ascii=False))
 finally:b.close()

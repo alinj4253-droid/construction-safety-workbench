@@ -1,0 +1,10 @@
+{
+  "html_seconds": 0.0,
+  "dashboard_api_seconds": 0.032,
+  "login_to_dashboard_seconds": 0.188,
+  "navigation": {
+    "dom_content_loaded_ms": 139.59999999962747,
+    "load_ms": 273.5
+  },
+  "homepage_under_2_seconds": true
+}

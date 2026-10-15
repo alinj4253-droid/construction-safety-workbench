@@ -30,6 +30,7 @@ def test_upload_review_type_version_undo_and_citations(tmp_path,monkeypatch):
             p,_=upload(category,no='QA-'+category,suffix=category)
             assert c.post(f"/api/kb/sources/{p['id']}/confirm",json={'confirmed':True,'note':'核对内部资料'}).status_code==200
             assert search('红杉围挡巡检',source_id=p['id'])
+            assert search('该资料的核心要求是什么',source_id=p['id'])
             assert not search('红杉围挡巡检',source_id=p['id'],for_document=True)
         assert c.post('/api/kb/version-rules',json={'old_no':s['doc_no'],'new_no':'QA-NEW','effective_date':'2020-02-01','basis_url':'QA合成版本关系，用于验证拦截'}).status_code==200
         # Block as soon as the independently registered legal relation applies.

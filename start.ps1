@@ -1,3 +1,5 @@
-$ErrorActionPreference = 'Stop'
+$ErrorActionPreference='Stop'
 Set-Location -LiteralPath $PSScriptRoot
-& "$PSScriptRoot/.venv/Scripts/python.exe" -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010
+$env:PYTHONUTF8='1'
+if (-not (Test-Path -LiteralPath '.venv/Scripts/python.exe')) { throw '请先按 README.md 安装 Python 3.11 与 requirements.txt。' }
+& .venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010 --timeout-graceful-shutdown 10

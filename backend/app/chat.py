@@ -52,9 +52,13 @@ def grounded_answer(question,evidence,history=None):
     # Only original source text is emitted. A model cannot introduce an unverified clause.
     lines=['根据已核验的知识库原文，检索到以下依据：']
     for i,e in enumerate(selected,1):
-        lines.append(f"\n{i}.《{e['name']}》 {e['doc_no']} {e['section']}（{e['display_status']}）\n{e['text']}")
+        lines.append(f"\n{i}.《{e['name']}》 {e['doc_no']} {e['section']}（{evidence_label(e)}）\n{e['text']}")
     lines.append('\n请结合现场实际、适用范围及专项方案人工核对；以上为原文检索结果。')
     return '\n'.join(lines),selected,meta
+
+def evidence_label(e):
+    semantic={'法规依据':'法规原文，适用范围仍需人工核对','项目资料':'项目内部执行资料，不作为法规依据','案例参考':'仅供学习警示，不作为法规依据'}
+    return e['display_status']+'；'+semantic[e['category']]
 
 def run_chat(run_id,question,sid,source_id):
     try:
@@ -69,7 +73,7 @@ def run_chat(run_id,question,sid,source_id):
         evidence=[] if memory_command else search(retrieval,source_id=source_id)
         if evidence:
             e=evidence[0]
-            prelude=f"根据已核验的知识库原文，检索到以下依据：\n\n1.《{e['name']}》 {e['doc_no']} {e['section']}（{e['display_status']}）\n{e['text']}"
+            prelude=f"根据已核验的知识库原文，检索到以下依据：\n\n1.《{e['name']}》 {e['doc_no']} {e['section']}（{evidence_label(e)}）\n{e['text']}"
             db.write('UPDATE chat_runs SET answer=? WHERE id=?',(prelude,run_id))
         db.write('UPDATE chat_runs SET status_message=? WHERE id=?',('已完成检索，正在依据原文整理回答',run_id))
         if question.startswith(('记住','请记住')):

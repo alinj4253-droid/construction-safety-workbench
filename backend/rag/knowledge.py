@@ -184,6 +184,7 @@ class Knowledge:
         return sorted(enumerate(map(float,scores)),key=lambda x:(-x[1],self.chunks[x[0]]['chunk_id']))
 
     def search(self,query,limit=5,for_document=False,source_id=None,include_history=False):
+        overview=bool(source_id and '核心要求' in query)
         query=query.replace('临电','临时用电').replace('基坑边','基坑临边')
         query=re.sub(r'有什么要求|有哪些要求|是什么|请问|的设置要求|有什么|具体要求|什么要求','',query)
         qt=set(tokens(query));preferred='JGJ80-2016' if any(x in query for x in ['临边','防护栏杆','楼梯口','高处']) else 'JGJ/T46-2024' if any(x in query for x in ['用电','接地','接零','TN-S']) else None
@@ -206,8 +207,11 @@ class Knowledge:
             if required and required!=canonical(c['doc_no']):continue
             if specific and not any(t in c['text'] for t in specific):continue
             overlap=qt.intersection(self.tfs[i])
-            if len(overlap)<min(2,len(qt)) or len(overlap)/max(1,len(qt))<.35:continue
+            if not overview and (len(overlap)<min(2,len(qt)) or len(overlap)/max(1,len(qt))<.35):continue
             eligible.add(i)
+        if overview:
+            ordered=sorted(eligible,key=lambda i:(self.chunks[i]['page'],self.chunks[i]['chunk_id']))[:limit]
+            return [{**self.chunks[i],'score':0,'citation_eligible':cite_allowed(self.chunks[i],relations=relations),'display_status':self.chunks[i]['status']} for i in ordered]
         fused=Counter()
         for weight,ranked in [(.55,self.dense(query)),(.45,self.bm25(query))]:
             filtered=[(i,s) for i,s in ranked if i in eligible and s>0]

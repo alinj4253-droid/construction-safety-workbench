@@ -26,3 +26,6 @@ def test_confirm_dismiss_idempotency_and_statistics(tmp_path,monkeypatch):
         assert s['violations']==3 and s['no_helmet']==2 and s['pending']==2
         assert sum(t['count'] for t in s['trend'])==s['no_helmet']
         assert len(s['classes'])==2 and '演示' in s['vest_mode']
+        db.write("UPDATE monitor_snapshots SET captured_at='2020-01-01T09:00:00+08:00'")
+        s=c.get('/api/monitor/overview').json()['data']
+        assert s['pending']==2 and s['violations']==0 and sum(t['count'] for t in s['trend'])==0

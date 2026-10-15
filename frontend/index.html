@@ -4,8 +4,6 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>施工安全管理工作台</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/noto-sans-sc@5.2.0/index.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/jetbrains-mono@5.2.5/index.css">
 <style>
 :root{
   --sb:#14181F; --sb-hover:#1E242E; --sb-active:#232B38;
@@ -689,7 +687,7 @@ tr.kb-flash{animation:kbflash 2s ease}
         <!-- 多路视频墙 -->
         <div style="display:flex;align-items:center;gap:10px;margin:2px 0 12px">
           <span style="font-size:13px;font-weight:700;color:#C7D0DC">现场画面 · 4 路摄像头</span>
-          <span class="chip" style="background:rgba(61,220,132,.12);color:#3DDC84">AI 检测叠加 · 演示模拟</span>
+          <span class="chip" style="background:rgba(61,220,132,.12);color:#3DDC84">本地回放 · 检测结果见抓拍</span>
           <span style="flex:1"></span>
           <button class="vw-btn" id="patrolBtn" onclick="togglePatrol()">▶ 自动轮巡</button>
         </div>
@@ -699,7 +697,6 @@ tr.kb-flash{animation:kbflash 2s ease}
             <div class="vw-nosignal" id="vwNoSignal"><div style="font-size:24px">📡</div><div>该路信号缺失 · 演示占位画面</div></div>
             <div class="vw-tag" id="vwTag">CAM-03 · 3#楼二层作业面</div>
             <div class="vw-live">LIVE</div>
-            <div class="vw-scan"></div>
             <div class="vw-detect" id="vwDetect"></div>
             <div class="vw-ai-badge">AI 分析中 · 演示叠加</div>
             <div class="vw-time" id="vwTime">--:--:--</div>
@@ -719,7 +716,7 @@ tr.kb-flash{animation:kbflash 2s ease}
       <div id="normal">
         <div class="grid" style="grid-template-columns:1.4fr 1fr">
           <div class="card">
-            <div class="card-h"><span class="t">今日抓拍记录</span><span class="chip blue">4 条待确认</span>
+            <div class="card-h"><span class="t">抓拍线索记录</span><span class="chip blue">待加载</span>
               <span style="flex:1"></span><span class="muted" style="font-size:12px">AI 是线索，人是裁判</span></div>
             <div class="card-b snap-list">
               <div class="snap">

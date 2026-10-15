@@ -1,0 +1,16 @@
+# 本机验收的直接依赖版本；视觉依赖可按机器选择 CPU/GPU 版 torch。
+fastapi==0.143.2
+uvicorn==0.54.0
+pydantic==2.14.1
+python-docx==1.2.0
+pytest==9.1.1
+httpx==0.28.1
+numpy==2.4.6
+pypdf==6.20.1
+beautifulsoup4==4.15.0
+python-multipart==0.0.32
+openpyxl==3.1.5
+ultralytics==8.4.175
+rarfile==4.5
+# 本机复用了既有 torch 2.7.1+cu126；模型推理使用 CPU。
+# 浏览器验收脚本另需 websocket-client 和本机 Google Chrome。

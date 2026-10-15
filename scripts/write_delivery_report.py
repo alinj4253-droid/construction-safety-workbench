@@ -1,0 +1,137 @@
+"""Assemble the delivery report from actual acceptance artifacts."""
+import json
+import subprocess
+from pathlib import Path
+from xml.etree import ElementTree as ET
+ROOT=Path(__file__).resolve().parents[1]
+def read(name):return json.loads((ROOT/'artifacts'/name).read_text(encoding='utf-8'))
+suite=ET.parse(ROOT/'artifacts/pytest-results.xml').getroot().find('testsuite')
+e2e=read('e2e-results.json');perf=read('performance.json');online=read('online-stream.json');seed=read('seed-delivery.json');vision=read('vision-acceptance.json')
+assert suite.attrib['failures']=='0' and suite.attrib['errors']=='0' and e2e['all_passed']
+pages=[read(f'phase{i}-browser.json') for i in range(4,11)]
+assert all(p['result']=='通过' and not p['browser_errors'] for p in pages)
+history=subprocess.check_output(['git','log','--oneline'],cwd=ROOT).decode('utf-8')
+rows='\n'.join(f"| {r['scenario']} · {r['name']} | 通过 | `e2e-results.json` → scenarios[{i}] |" for i,r in enumerate(e2e['scenarios']))
+page_rows='\n'.join(f"| {p.get('page','全局身份')} | 通过 | {'、'.join(p['checks'])} | [JSON](../artifacts/phase{i}-browser.json) |" for i,p in zip(range(4,11),pages))
+text=f'''# 最终交付报告
+
+验收记录时间：{e2e['run_at']}（上海时区）。阶段0→11已按顺序完成，各功能页验收后独立提交。系统现可在本机运行；前端沿用原型六页布局，API、数据库、检索、双角色办理与真实视频检测已经接通。
+
+## 启动与交付内容
+
+在根目录运行 `./start.ps1`，或 `.venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010`，打开 http://127.0.0.1:8010 。本轮已启动本地服务，可以直接访问。
+
+安全员账号 `AQ20260001` / `AQ20260002`，总监账号 `AQ20260003`，初始密码均为 `123456`。安装、模型配置、数据重建、权限和运行边界见 [README](../README.md)。
+
+- [x] `frontend/`：工作台、AI安全助手、隐患办理、隐患台账、AI监控、知识库。
+- [x] `backend/`：FastAPI、SQLite事务/状态机、鉴权、RAG、短长期记忆、文书、审核和操作留痕。
+- [x] 双模型：DeepSeek办理，豆包Seed独立复核；实际账号连通测试与真实办理调用已完成。
+- [x] 真实YOLO本地视频检测、抓拍存档、人工确认/驳回、幂等入账与重复片段去重。
+- [x] 本地 `backend/data/app.db` 与 `index.npz`：6条历史隐患、4条独立待确认演示线索，76份来源、2745条保留片段；74份正文已解析、9份初始核验现行资料。其他资料保持待核验或历史状态。
+- [x] 交付库无验收文书、无验收会话。SQLite完整性和外键检查通过。测试数据与证据单独保留，见 [种子库检查](../artifacts/seed-delivery.json)。
+- [x] 测试代码、逐页截图、5条端到端证据、Word排版预览与完整Git提交记录。
+
+密钥只在被忽略的本地 `.env`，未进入当前跟踪文件或提交历史。数据库、模型、视频、OCR缓存不纳入Git，但本机已保留；仅克隆代码时需按README复制这些资产或重建。原型HTML哈希保持不变，两个旧工程源文件作为基线保留，没有gitlink遗漏。
+
+## 批判性修正与自主补全
+
+详见 [审读与修正记录](审读与修正记录.md)。主要修正如下，均已落实与验证：
+
+1. 原清单实际74条，而不是75条；加上成功解包的两项福建标准，当前登记76份，不凑数。63行原始来源URL缺失如实保留。
+2. 审核状态、解析状态、法定效力、地域与条款效力分开处理。原型JGJ80的4.1.1不能继续作为当前依据；现用核对原页的4.3.1。发布公告不冒充规范全文。
+3. 人工签发关联原隐患，不重复新增；发现来源保留，唯一文书编号与引用快照持久化。正式签发前再次验证事实版本及引用资格。
+4. 待确认抓拍单独成队列；确认后只创建一次轻轨，驳回无台账记录。安全帽模型是两个头部类别，不套用错误的人体配对算法。
+5. 逾期为派生标记，重轨可退回整改；截止日按上海时区当日结束。跨零点后，待确认线索统计所有未处理记录，今日统计只计当天，趋势覆盖0—23时。
+6. 最近8条上下文、旧消息可追溯摘要、显式长期记忆、历史会话、账号隔离、查看删除与敏感信息拦截补全。记忆不充当法规或现场事实。
+7. 版本撤销只撤管理状态，不恢复已废止法律效力，不改已签发文书。替代关系一生效即拦截新引用，不依赖管理员先点归档。
+8. 不故意制造正常办理错误；返工测试采用隔离环境显式测试草稿注入，任务/文书有测试标记，正式接口默认拒绝。
+9. 去除假复核通过、假短信送达、任意密码登录、假实时检测框；本地回放、反光衣和门禁演示均明确标识。字体CDN移除，界面资源本地可用。
+10. 增加中断任务恢复、重复操作保护、签发前条款状态复核、非法流转和角色权限拦截，以及与实际状态一致的问候与日期。
+
+未覆盖决策点：本轮发现的实现决策已按用户授权自主处理，并记录在审读文档和上述说明中；没有等待确认的实现项。RTSP、真实门禁/短信、生产组织账号等仍是明确的后续范围。
+
+## 每页测试清单结果
+
+以下为实际浏览器操作，加上对应后端测试；各页截图均在 `artifacts/`，已检查版面和交互。
+
+| 页面 | 结果 | 浏览器检查项 | 证据 |
+|---|---|---|---|
+{page_rows}
+
+对应API与逻辑测试见 `test_dashboard.py`、`test_chat.py`、`test_memory.py`、`test_handling.py`、`test_hazards.py`、`test_monitor.py`、`test_kb.py`、`test_identity.py`。每个测试函数含多项状态、数据及权限断言。
+
+### 第三部分功能验收总清单回归
+
+- [x] P1：问候、日期、四统计卡与数据库一致。
+- [x] P1：待办按逾期→待复查→待确认排序；处理、复查、监控定位与四快捷入口可用。
+- [x] P1：监控今日概览来自实际线索统计，门禁/反光衣演示有标识。
+- [x] P2：SSE流式回答，原文引用可定位P5；无依据明确拒答。
+- [x] P2：三快捷提问可用；JSA/交底/日志均为草稿待审核，保存及Word导出可用。
+- [x] P2：历史会话增删查、刷新恢复、跨账号隔离、短长期记忆及查看删除可用。
+- [x] P2：隐患正式文书入口跳转P6。
+- [x] P6：待办理列表来自台账；检索、A起草、规则检查、B独立复核及交接记录可见并落库。
+- [x] P6：阻断批注、至多一次返工、依据不足转人工、缺字段不签发均已验证。
+- [x] P6：人工确认后签发唯一编号，关联原重轨且不重复新增，重复请求幂等。
+- [x] P6：保存草稿、实际剪贴板复制、Word导出、实际整改反馈可用，无“复核通过”误导。
+- [x] P3：双轨四tab计数、登记、催办、现场确认、整改、复查退回/销项全部落库留痕。
+- [x] P3：非法流转与旧版本请求被拒；文书带对象跳P6，相关条款跳P2。
+- [x] P3：CSV与Excel按当前筛选导出，数量和记录与页面一致，含文书/引用/事件/附件索引。
+- [x] P4：在场人数按演示或未接入标识；抓拍、时段、热点和全天趋势由真实数据聚合。
+- [x] P4：四路切换、自动轮巡、检测任务与抓拍图片可用。
+- [x] P4：确认→轻轨，驳回→不入账，重复确认与重复视频片段不重复创建。
+- [x] P4：两检测类别、历史训练指标、线索辅助/不做人脸识别声明、反光衣演示标识可见。
+- [x] P5：三类语义落实于检索/文书引用；待核验文件在确认前不能参与普通检索。
+- [x] P5：上传、解析、人工核验、检查更新、登记替代关系、变更日志及撤销均可用。
+- [x] P5：整版与条款废止、地域、发布公告、未生效日期与未核验资料拦截；引用计数来自实际签发记录。
+- [x] P5：类型、状态、关键词及引用次数排序正确。
+- [x] 全局：错误凭证拒绝、刷新恢复、切换身份、退出撤销令牌；P1/P3/P6视角与权限随身份变化。
+- [x] 全局：抽查登记/办理任务/签发/确认抓拍/知识库上传五类写操作，均有actor、时间、动作及对象。
+- [x] 全局：无LLM仍能检索、起草、复核与闭环，明确标记“当前为离线兜底结果”。
+- [x] 全局：所有阶段独立提交；原型与知识源原料保留。
+
+## 五条端到端逻辑测试
+
+| 场景 | 结果 | 证据定位 |
+|---|---|---|
+{rows}
+
+原始证据：[e2e-results.json](../artifacts/e2e-results.json)，可重跑 `python -m pytest backend/tests/test_e2e.py -q`。数据库为临时副本，自动禁用LLM，不污染交付库。
+
+- 场景1：显式注入错误期限，规则及独立兜底复核识别，A修订到第二版后无阻断；人工签发→催办→整改→复查退回→重新整改→销项→导出，记录events、reviews、唯一编号、引用计数和文件哈希。
+- 场景2：两条待确认线索分别确认与驳回，仅确认创建一条轻轨，纠正教育后闭环。
+- 场景3：临边命中现行JGJ80-2016 4.3.1；接地命中JGJ/T46-2024；旧JGJ46不作当前依据；未知问题无引用并明确拒答。
+- 场景4：合成资料上传待核验→人工确认→P2实际检索引用→登记替代→旧版停止新引用→归档→撤销仍不可引用；新版可用，已签发内容不变。
+- 场景5：LLM_ENABLED=0时重新完成隐患签发与闭环及三类问答，接口和内容均表明离线模式。
+
+## 自动化、真实模型与性能证据
+
+- 后端：**{suite.attrib['tests']}项通过，失败0、错误0、跳过{suite.attrib['skipped']}，耗时{suite.attrib['time']}秒**。[JUnit原始记录](../artifacts/pytest-results.xml)。包含20问检索、跨进程排序稳定性、权限、文件导出、跨日统计、记忆隔离及全部5条E2E。
+- 浏览器：六页及身份流程均通过，采集到的未处理JavaScript异常为0；独立临时Chrome配置，不改个人浏览器资料。
+- 大模型：真实在线流式首字 **{online['first_answer_token_seconds']}秒**，完整回答与数据库逐字一致；总耗时{online['total_seconds']}秒。[在线流式证据](../artifacts/online-stream.json)。
+- 双模型：真实DeepSeek起草、豆包Seed复核均返回online，任务等待人工签发；调用时长/模型名/用量与交接记录见 [online-handling.json](../artifacts/online-handling.json)。正常任务不强行制造错误。
+- 首页：HTML请求{perf['html_seconds']}秒、工作台API {perf['dashboard_api_seconds']}秒、登录至可用{perf['login_to_dashboard_seconds']}秒；完整页面load事件 **{perf['navigation']['load_ms']}毫秒**，低于2秒。[性能证据](../artifacts/performance.json)。为本机抽样，不承诺其他网络和设备相同时延。
+- 视觉：本地1280尺寸真实YOLO推理8帧，产生{vision['real_inference']['result']['new_clues']}条局部轨迹线索；重复同片段新增{vision['repeat_same_clip']['result']['new_clues']}条。图片中可见误报风险，不能当作唯一人员数量或自动判定事实。[真实检测证据](../artifacts/vision-acceptance.json)、[检测图](../artifacts/vision-frame.jpg)。
+- Word：python-docx实际生成，既检查ZIP文档结构与字段，又用本机Word渲染后检查版面。示例 [整改通知单](../artifacts/handling-word-1.png)、[安全日志草稿](../artifacts/word-page-1.png)。
+- 交付检查：[delivery-checks.json](../artifacts/delivery-checks.json)：密钥未进Git、`.env`被忽略、原型哈希一致、根Git无gitlink。
+
+## Git提交记录
+
+阶段0—11对应执行文档的12个独立里程碑，另有初始基线和必要修复/报告提交。完整最终 `git log --oneline` 输出保存在 [git-log.txt](../artifacts/git-log.txt)（最终归档后生成的本地文件）。也可在根目录直接执行 `git log --oneline`。
+
+报告生成时的提交如下；报告自身归档及其后的记录以完整日志文件为准：
+
+```text
+{history.strip()}
+```
+
+## 已知限制与后续建议
+
+1. 当前为可本地使用的单进程全栈系统。生产账号管理、组织级权限、TLS、备份运维、RTSP、真实门禁与短信尚未接入；不会声称已实现。
+2. 安全帽模型只检测Helmet/NOHelmet两个头部类别；反光衣为演示，门禁在场87人为演示值，未接入日期显示缺数据。历史mAP/P/R不等于现场准确率，真实检测存在误报漏报，现场确认不能省略。
+3. 知识库76份并不代表76份都可引用。9份已初始核验；其余保持待核验或历史状态。扫描PDF只启用已核对的核心条款，旧DOC须转换核验。原始清单63行缺有效URL，部分JGJ标准只有公告，不能据此编条款。
+4. RAG采用稳定哈希向量与BM25的独立召回/RRF融合，当前不是预训练语义嵌入；复杂跨法规解释采用原文摘录并保留人工核对。后续可补齐高质量全文与语义模型，再做检索评测。
+5. 问答、记忆、规则与模型复核不能替代安全员对事实、法规适用性和措施的判断。JSA/交底/日志保持草稿，正式整改通知单必须人工签发。
+6. 首字和首页性能为本机实测抽样，外部模型超时会如实降级。服务重启中断任务会标记可重试，保留已有记录，当前不使用跨进程任务队列。
+'''
+(ROOT/'docs/最终交付报告.md').write_text(text,encoding='utf-8')
+print('delivery report generated from passing test artifacts')

@@ -20,5 +20,6 @@ artifacts/tmp/
 *.log
 Ultralytics/
 artifacts/browser-failure.png
+artifacts/git-log.txt
 **/node_modules/
 **/.git/
