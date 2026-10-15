@@ -77,7 +77,7 @@ def put_chunks(c,source,pages,verified_only=False):
     # Preserve chunks already cited by issued documents; switch index membership instead.
     c.execute('INSERT OR IGNORE INTO chunk_states(chunk_id,active) SELECT chunk_id,0 FROM kb_chunks WHERE source_id=?',(source['id'],))
     c.execute('UPDATE chunk_states SET active=0 WHERE chunk_id IN (SELECT chunk_id FROM kb_chunks WHERE source_id=?)',(source['id'],))
-    chunks=VERIFIED.get(source['doc_no'])
+    chunks=VERIFIED.get(source['doc_no']) if verified_only else None
     pieces=chunks if chunks else list(split_pages(pages))
     for page,section,text in pieces:
         key=hashlib.sha256(f"{source['sha256']}|{page}|{section}|{text}".encode()).hexdigest()[:24]
@@ -109,7 +109,7 @@ def rebuild():
                 core=CORE.get(name)
                 if core:
                     source['name'],source['doc_no'],source['effective_date'],source['source_url']=core
-                count=put_chunks(c,source,pages)
+                count=put_chunks(c,source,pages,verified_only=bool(core))
                 # Explicit core source validation only; original manifest is never treated as approval.
                 approved=bool(core or source['file_path'] in extra)
                 historical=source['legal_status']=='已废止'
@@ -150,10 +150,12 @@ def vector(text,dim=512):
 
 def canonical(no):return re.sub(r'\s+','',no or '').upper()
 
-def cite_allowed(source,region='厦门'):
+def cite_allowed(source,region='厦门',relations=None):
     applicable=source.get('region','') in {'国家','全国','福建','福建省','厦门','厦门市','国家/全国'} or region in source.get('region','')
     withdrawn=source.get('section') in CLAUSE_WITHDRAWALS.get(canonical(source.get('doc_no')),set())
-    return not withdrawn and source.get('chunk_legal_status','现行')=='现行' and source.get('chunk_active',1)==1 and source.get('status')=='现行' and source.get('legal_status')=='现行' and source.get('category')=='法规依据' and source.get('parsed')==1 and source.get('content_kind')!='发布公告' and applicable
+    if relations is None:relations=db.rows('SELECT * FROM version_rules')
+    replaced=any(canonical(r['old_no'])==canonical(source.get('doc_no')) and r['effective_date']<=str(db.today()) for r in relations)
+    return not replaced and not withdrawn and (not source.get('effective_date') or source['effective_date']<=str(db.today())) and source.get('chunk_legal_status','现行')=='现行' and source.get('chunk_active',1)==1 and source.get('status')=='现行' and source.get('legal_status')=='现行' and source.get('category')=='法规依据' and source.get('parsed')==1 and source.get('content_kind')!='发布公告' and applicable
 
 class Knowledge:
     def __init__(self):
@@ -189,12 +191,18 @@ class Knowledge:
         requested=re.search(r'(?:JGJ/?T?|GB/?T?|DBJ/?T?)[\s\d/-]+\d',query,re.I)
         required=canonical(requested.group()) if requested else None
         specific=[t for t in ['临边','楼梯','接地','连墙件','安全帽','有限空间','模板','起重'] if t in query]
+        relations=db.rows('SELECT * FROM version_rules WHERE effective_date<=?',(str(db.today()),))
         for i,c in enumerate(self.chunks):
+            replaced=any(canonical(r['old_no'])==canonical(c['doc_no']) for r in relations)
+            if replaced and not include_history:continue
+            if replaced:c={**c,'legal_status':'已废止'};self.chunks[i]=c
             if not c['chunk_active']:continue
+            if c['legal_status']!='现行' and not include_history:continue
+            if c['effective_date'] and c['effective_date']>str(db.today()) and not include_history:continue
             if c['chunk_legal_status']!='现行' and not include_history:continue
             if source_id and c['source_id']!=int(source_id):continue
             if c['status']!='现行' and not (include_history and c['status']=='历史版本'):continue
-            if for_document and not cite_allowed(c):continue
+            if for_document and not cite_allowed(c,relations=relations):continue
             if required and required!=canonical(c['doc_no']):continue
             if specific and not any(t in c['text'] for t in specific):continue
             overlap=qt.intersection(self.tfs[i])
@@ -208,7 +216,7 @@ class Knowledge:
         if preferred:
             preferred_rows=[i for i in ordered if canonical(self.chunks[i]['doc_no'])==preferred]
             if preferred_rows:ordered=preferred_rows
-        return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i]),'display_status':self.chunks[i]['chunk_legal_status'] if self.chunks[i]['chunk_legal_status']!='现行' else '已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
+        return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i],relations=relations),'display_status':self.chunks[i]['chunk_legal_status'] if self.chunks[i]['chunk_legal_status']!='现行' else '已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
 
 def search(*args,**kwargs):return Knowledge().search(*args,**kwargs)
 

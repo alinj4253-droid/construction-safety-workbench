@@ -776,9 +776,9 @@ tr.kb-flash{animation:kbflash 2s ease}
         <div class="d">查依据 · 管资料 —— AI 助手与隐患文书引用的每一条条款都从这里来 · 版本有效性参与检索</div>
       </div>
       <div class="stats" style="grid-template-columns:repeat(3,1fr)">
-        <div class="stat-card" style="--x:1"><div class="stat-label">在库资料</div><div class="stat-num" style="color:var(--accent)" id="kbStatNum">23</div><div class="stat-sub">份 · 样板库 · 正式库 100+ 份</div></div>
-        <div class="stat-card" style="--x:2"><div class="stat-label">全文已解析</div><div class="stat-num" style="color:var(--green)" id="kbStatFull">4</div><div class="stat-sub">部核心法规 · AI 可精读引用</div></div>
-        <div class="stat-card" style="--x:3"><div class="stat-label">待核验</div><div class="stat-num" style="color:var(--amber)" id="kbStatCk">1</div><div class="stat-sub">项 · 人工确认后生效</div></div>
+        <div class="stat-card" style="--x:1"><div class="stat-label">在库资料</div><div class="stat-num" style="color:var(--accent)" id="kbStatNum">—</div><div class="stat-sub">份 · 以实际登记文件为准</div></div>
+        <div class="stat-card" style="--x:2"><div class="stat-label">正文已解析</div><div class="stat-num" style="color:var(--green)" id="kbStatFull">—</div><div class="stat-sub">份 · 审核与效力另行校验</div></div>
+        <div class="stat-card" style="--x:3"><div class="stat-label">待核验</div><div class="stat-num" style="color:var(--amber)" id="kbStatCk">—</div><div class="stat-sub">项 · 人工确认后生效</div></div>
       </div>
       <div style="display:flex;gap:6px;background:#F1F3F5;padding:5px;border-radius:12px;width:max-content;margin-bottom:14px">
         <div class="kb-tab on" id="kbTabB" onclick="kbTab('browse')">📖 查资料</div>
@@ -796,10 +796,11 @@ tr.kb-flash{animation:kbflash 2s ease}
         </div></div>
       </div>
       <div id="kbPaneGov" style="display:none">
-        <div class="card" style="margin-bottom:14px"><div class="card-h"><span class="t">检查更新</span><span class="chip blue">官方渠道核验</span></div>
+        <div class="card" style="margin-bottom:14px"><div class="card-h"><span class="t">检查更新</span><span class="chip blue">登记关系比对</span></div>
           <div class="card-b">
-            <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">定期比对住建部 / 应急管理部 / 标准委公开发布渠道，发现版本差异后进入「待核验」，经人工确认才生效——防止引用失效版本。</p>
+            <p style="font-size:12.5px;color:var(--muted);margin-bottom:10px">按人工核实后登记的版本替代关系进行本地比对。发现旧版即拦截新引用；新资料需核对原文后人工确认。本功能不代表实时联网覆盖全部法规。</p>
             <button class="btn primary" onclick="checkUpdate2()">🔄 检查更新</button>
+            <button class="btn" onclick="openVersionRule()">登记版本替代关系</button>
             <div id="kbUpProg" style="margin-top:6px"></div>
           </div></div>
         <div class="card" style="margin-bottom:14px"><div class="card-h"><span class="t">待核验</span><span class="chip amber" id="kbCkCnt">1 项</span></div>

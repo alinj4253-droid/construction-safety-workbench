@@ -1,0 +1,15 @@
+{
+  "page": "P5",
+  "result": "通过",
+  "checks": [
+    "类型状态关键词筛选",
+    "条款废止标签",
+    "上传待核验",
+    "人工核验生效",
+    "登记版本关系检查",
+    "变更日志与撤销"
+  ],
+  "source_id": 78,
+  "browser_errors": [],
+  "screenshot": "artifacts/p5-knowledge.png"
+}

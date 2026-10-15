@@ -18,6 +18,7 @@ from backend.app.documents import router as documents_router
 from backend.app.memory import router as memory_router
 from backend.app.handle import router as handle_router
 from backend.app.monitor import router as monitor_router
+from backend.app.kb import router as kb_router
 
 def ok(data=None,message='ok'):return {'code':0,'data':data,'message':message}
 BUILD_SIGNATURE=hashlib.sha256(b''.join(p.read_bytes() for p in sorted((db.ROOT/'backend').rglob('*.py')))).hexdigest()[:16]
@@ -35,6 +36,7 @@ app.include_router(documents_router)
 app.include_router(memory_router)
 app.include_router(handle_router)
 app.include_router(monitor_router)
+app.include_router(kb_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:8010','http://localhost:8010'],allow_methods=['GET','POST','DELETE','PATCH'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(HTTPException)
@@ -77,18 +79,3 @@ app.mount('/videos',StaticFiles(directory=db.ROOT/'videos'),name='videos')
 
 @app.get('/favicon.ico',include_in_schema=False)
 def favicon():return Response(status_code=204)
-
-@app.get('/api/kb/sources/{sid:int}')
-def source_detail(sid:int,user=Depends(current_user)):
-    s=db.one('SELECT * FROM kb_sources WHERE id=?',(sid,))
-    if not s:raise HTTPException(404,'资料不存在')
-    s['chunks']=db.rows('SELECT * FROM kb_chunks WHERE source_id=? ORDER BY page,chunk_id LIMIT 100',(sid,))
-    return ok(s)
-
-@app.get('/api/kb/sources/{sid:int}/file')
-def source_file(sid:int,user=Depends(current_user)):
-    s=db.one('SELECT * FROM kb_sources WHERE id=?',(sid,))
-    if not s:raise HTTPException(404,'资料不存在')
-    path=(db.ROOT/s['file_path']).resolve()
-    if not path.is_relative_to(db.ROOT.resolve()) or not path.is_file():raise HTTPException(404,'原文件不存在')
-    return FileResponse(path,filename=path.name)
