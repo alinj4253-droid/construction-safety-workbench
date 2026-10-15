@@ -195,6 +195,9 @@ class Knowledge:
             filtered=[(i,s) for i,s in ranked if i in eligible and s>0]
             for rank,(i,score) in enumerate(filtered,1):fused[i]+=weight/(60+rank)
         ordered=sorted(fused,key=lambda i:(-(fused[i]+(.02 if preferred and canonical(self.chunks[i]['doc_no'])==preferred else 0)),self.chunks[i]['chunk_id']))[:limit]
+        if preferred:
+            preferred_rows=[i for i in ordered if canonical(self.chunks[i]['doc_no'])==preferred]
+            if preferred_rows:ordered=preferred_rows
         return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i]),'display_status':'已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
 
 def search(*args,**kwargs):return Knowledge().search(*args,**kwargs)

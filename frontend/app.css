@@ -1,0 +1,7 @@
+.ai-side {overflow-y:auto;}
+.ai-side > * {flex-shrink:0;}
+.chat-list {min-height:65px;max-height:145px;overflow-y:auto;}
+.src-card p {overflow-wrap:anywhere;}
+.card-b.wl {max-height:480px;overflow-y:auto;}
+.btn:disabled {opacity:.55;cursor:not-allowed;}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible {outline:2px solid #E8590C;outline-offset:2px;}

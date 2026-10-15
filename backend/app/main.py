@@ -12,6 +12,9 @@ from backend.app import db
 from backend.app.security import current_user,login,digest
 from backend.app.dashboard import router as dashboard_router
 from backend.app.hazards import router as hazards_router
+from backend.app.chat import router as chat_router
+from backend.app.documents import router as documents_router
+from backend.app.memory import router as memory_router
 
 def ok(data=None,message='ok'):return {'code':0,'data':data,'message':message}
 
@@ -23,6 +26,9 @@ async def lifespan(app):
 app=FastAPI(title='施工安全管理工作台',version='1.0.0',lifespan=lifespan)
 app.include_router(dashboard_router)
 app.include_router(hazards_router)
+app.include_router(chat_router)
+app.include_router(documents_router)
+app.include_router(memory_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:8010','http://localhost:8010'],allow_methods=['GET','POST','DELETE','PATCH'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(HTTPException)
@@ -65,3 +71,18 @@ app.mount('/videos',StaticFiles(directory=db.ROOT/'videos'),name='videos')
 
 @app.get('/favicon.ico',include_in_schema=False)
 def favicon():return JSONResponse(None,status_code=204)
+
+@app.get('/api/kb/sources/{sid:int}')
+def source_detail(sid:int,user=Depends(current_user)):
+    s=db.one('SELECT * FROM kb_sources WHERE id=?',(sid,))
+    if not s:raise HTTPException(404,'资料不存在')
+    s['chunks']=db.rows('SELECT * FROM kb_chunks WHERE source_id=? ORDER BY page,chunk_id LIMIT 100',(sid,))
+    return ok(s)
+
+@app.get('/api/kb/sources/{sid:int}/file')
+def source_file(sid:int,user=Depends(current_user)):
+    s=db.one('SELECT * FROM kb_sources WHERE id=?',(sid,))
+    if not s:raise HTTPException(404,'资料不存在')
+    path=(db.ROOT/s['file_path']).resolve()
+    if not path.is_relative_to(db.ROOT.resolve()) or not path.is_file():raise HTTPException(404,'原文件不存在')
+    return FileResponse(path,filename=path.name)

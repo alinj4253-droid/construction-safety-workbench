@@ -42,14 +42,15 @@ class Browser:
         deadline=time.monotonic()+timeout
         while time.monotonic()<deadline:
             try:
-                r=self.js(expression)
+                r=self.js('Boolean('+expression+')')
                 if r:return r
             except AssertionError:pass
             time.sleep(.1)
-        raise AssertionError('browser condition timed out: '+expression)
+        self.screenshot('browser-failure.png')
+        raise AssertionError('browser condition timed out: '+expression+' '+str(self.js("({url:location.href,ready:document.readyState,title:document.title,errors:document.body?.textContent.slice(0,300)})"))+' '+str(self.errors))
     def goto(self,url='http://127.0.0.1:8010/'):
         self.call('Page.navigate',{'url':url})
-        self.wait("document.readyState==='complete' && typeof doLogin==='function'")
+        self.wait("document.readyState!=='loading' && typeof doLogin==='function'",timeout=40)
         self.wait("document.querySelector('#lgUser').options[0].value==='AQ20260001'")
     def login(self,user='AQ20260001'):
         self.js(f"document.getElementById('lgUser').value={json.dumps(user)};document.querySelector('#loginGate input[type=password]').value='123456';doLogin()")
