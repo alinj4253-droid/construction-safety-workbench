@@ -39,3 +39,7 @@ def test_citation_excludes_case_expired_region(index):
     assert cite_allowed(row)
     for change in [{'region':'北京'},{'legal_status':'已废止'},{'category':'案例参考'},{'status':'待核验'},{'content_kind':'发布公告'}]:
         assert not cite_allowed({**row,**change})
+    assert not cite_allowed({**row,'doc_no':'JGJ80-2016','section':'4.1.1'})
+    found=index.search('基坑临边防护',for_document=True)
+    assert any(r['doc_no']=='JGJ80-2016' and r['section']=='4.3.1' for r in found)
+    assert all(not (r['doc_no']=='JGJ80-2016' and r['section']=='4.1.1') for r in found)

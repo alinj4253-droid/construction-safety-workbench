@@ -94,6 +94,8 @@ CREATE TABLE IF NOT EXISTS attachments(id INTEGER PRIMARY KEY,hazard_id INTEGER 
 CREATE TABLE IF NOT EXISTS audit_logs(id INTEGER PRIMARY KEY,actor TEXT,action TEXT,object_type TEXT,object_id TEXT,detail TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS user_memories(id INTEGER PRIMARY KEY,user_id INTEGER REFERENCES users(id),value TEXT,source_session_id TEXT,source_message_id INTEGER,created_at TEXT,updated_at TEXT,active INTEGER DEFAULT 1);
 CREATE TABLE IF NOT EXISTS session_summaries(session_id TEXT PRIMARY KEY REFERENCES chat_sessions(id) ON DELETE CASCADE,summary TEXT,summarized_through INTEGER DEFAULT 0,source_message_ids TEXT DEFAULT '[]',updated_at TEXT);
+CREATE TABLE IF NOT EXISTS task_inputs(task_id TEXT PRIMARY KEY REFERENCES handle_tasks(id),facts_json TEXT,test_case TEXT);
+CREATE TABLE IF NOT EXISTS chunk_states(chunk_id TEXT PRIMARY KEY REFERENCES kb_chunks(chunk_id),active INTEGER DEFAULT 1,legal_status TEXT DEFAULT '现行',note TEXT);
 CREATE INDEX IF NOT EXISTS idx_hazards_status ON hazards(status,deadline);
 CREATE INDEX IF NOT EXISTS idx_chunks_source ON kb_chunks(source_id);
 CREATE INDEX IF NOT EXISTS idx_messages_session ON chat_messages(session_id,id);

@@ -25,9 +25,12 @@ CORE={
 # These passages were transcribed against the rendered original pages in this build.
 # OCR for the rest is searchable for inspection only until a source reviewer confirms it.
 VERIFIED={
- 'JGJ80-2016':[(13,'4.1.1','坠落高度基准面2m及以上进行临边作业时，应在临空一侧设置防护栏杆，并应采用密目式安全立网或工具式栏板封闭。'),(13,'4.1.2','施工的楼梯口、楼梯平台和梯段边，应安装防护栏杆；外设楼梯口、楼梯平台和梯段边还应采用密目式安全立网封闭。')],
+ 'JGJ80-2016':[(13,'4.1.1','坠落高度基准面2m及以上进行临边作业时，应在临空一侧设置防护栏杆，并应采用密目式安全立网或工具式栏板封闭。'),(13,'4.1.2','施工的楼梯口、楼梯平台和梯段边，应安装防护栏杆；外设楼梯口、楼梯平台和梯段边还应采用密目式安全立网封闭。'),(14,'4.3.1','临边作业的防护栏杆应由横杆、立杆及挡脚板组成，防护栏杆应符合下列规定：1 防护栏杆应为两道横杆，上杆距地面高度应为1.2m，下杆应在上杆和挡脚板中间设置；2 当防护栏杆高度大于1.2m时，应增设横杆，横杆间距不应大于600mm；3 防护栏杆立杆间距不应大于2m；4 挡脚板高度不应小于180mm。')],
+ 'GB55034-2022':[(6,'3.1.3','施工现场应根据安全事故类型采取防护措施。对存在的安全问题和隐患，应定人、定时间、定措施组织整改。'),(6,'3.2.1','在坠落高度基准面上方2m及以上进行高空或高处作业时，应设置安全防护设施并采取防滑措施，高处作业人员应正确佩戴安全帽、安全带等劳动防护用品。'),(6,'3.2.3','在建工程的预留洞口、通道口、楼梯口、电梯井口等孔洞以及无围护设施或围护设施高度低于1.2m的楼层周边、楼梯侧边、平台或阳台边、屋面周边和沟、坑、槽等边沿应采取安全防护措施，并严禁随意拆除。')],
  'JGJ/T46-2024':[(12,'3.1.1','施工现场临时用电工程专用的电源中性点直接接地的220V/380V三相四线制低压电力系统，应符合下列规定：1 应采用三级配电系统；2 应采用TN-S系统；3 应采用二级剩余电流动作保护系统。'),(12,'3.2.1','在施工现场专用变压器供电的TN-S系统中，电气设备的金属外壳应与保护接地导体（PE）连接。保护接地导体（PE）应由工作接地、配电室（总配电箱）电源侧中性导体（N）处引出（图3.2.1）。'),(12,'3.2.3','在TN系统中，通过总剩余电流动作保护器的中性导体（N）与保护接地导体（PE）之间不得再做电气连接。'),(12,'3.2.4','在TN系统中，保护接地导体（PE）应与中性导体（N）分开敷设。PE接地必须与保护接地导体（PE）相连接，严禁与中性导体（N）相连接。')],
 }
+CLAUSE_WITHDRAWALS={'JGJ80-2016':{'4.1.1','4.2.1','5.2.3','6.4.1','8.1.2'}}
+WITHDRAWAL_BASIS='住建部公告2022年第164号，2023-06-01起；GB55034-2022优先。资料包文件名误写118号，按正文更正。'
 
 def compact(text):
     text=text.encode('utf-8','replace').decode('utf-8').replace('\x00','')
@@ -71,12 +74,16 @@ def split_pages(pages):
                 if len(piece)>=25:yield page,section,piece
 
 def put_chunks(c,source,pages,verified_only=False):
-    c.execute('DELETE FROM kb_chunks WHERE source_id=?',(source['id'],))
+    # Preserve chunks already cited by issued documents; switch index membership instead.
+    c.execute('INSERT OR IGNORE INTO chunk_states(chunk_id,active) SELECT chunk_id,0 FROM kb_chunks WHERE source_id=?',(source['id'],))
+    c.execute('UPDATE chunk_states SET active=0 WHERE chunk_id IN (SELECT chunk_id FROM kb_chunks WHERE source_id=?)',(source['id'],))
     chunks=VERIFIED.get(source['doc_no'])
     pieces=chunks if chunks else list(split_pages(pages))
     for page,section,text in pieces:
         key=hashlib.sha256(f"{source['sha256']}|{page}|{section}|{text}".encode()).hexdigest()[:24]
         c.execute('INSERT OR IGNORE INTO kb_chunks VALUES(?,?,?,?,?)',(key,source['id'],section,text,page))
+        withdrawn=section in CLAUSE_WITHDRAWALS.get(canonical(source['doc_no']),set())
+        c.execute('INSERT INTO chunk_states VALUES(?,?,?,?) ON CONFLICT(chunk_id) DO UPDATE SET active=excluded.active,legal_status=excluded.legal_status,note=excluded.note',(key,1,'旧强制性条文已废止' if withdrawn else '现行',WITHDRAWAL_BASIS if withdrawn else '正文已解析'))
     return len(pieces)
 
 def rebuild():
@@ -145,11 +152,12 @@ def canonical(no):return re.sub(r'\s+','',no or '').upper()
 
 def cite_allowed(source,region='厦门'):
     applicable=source.get('region','') in {'国家','全国','福建','福建省','厦门','厦门市','国家/全国'} or region in source.get('region','')
-    return source.get('status')=='现行' and source.get('legal_status')=='现行' and source.get('category')=='法规依据' and source.get('parsed')==1 and source.get('content_kind')!='发布公告' and applicable
+    withdrawn=source.get('section') in CLAUSE_WITHDRAWALS.get(canonical(source.get('doc_no')),set())
+    return not withdrawn and source.get('chunk_legal_status','现行')=='现行' and source.get('chunk_active',1)==1 and source.get('status')=='现行' and source.get('legal_status')=='现行' and source.get('category')=='法规依据' and source.get('parsed')==1 and source.get('content_kind')!='发布公告' and applicable
 
 class Knowledge:
     def __init__(self):
-        self.chunks=db.rows('SELECT k.*,s.name,s.doc_no,s.region,s.status,s.legal_status,s.source_url,s.category,s.parsed,s.content_kind,s.file_path,s.effective_date FROM kb_chunks k JOIN kb_sources s ON s.id=k.source_id ORDER BY k.chunk_id')
+        self.chunks=db.rows('SELECT k.*,s.name,s.doc_no,s.region,s.status,s.legal_status,s.source_url,s.category,s.parsed,s.content_kind,s.file_path,s.effective_date,coalesce(cs.active,1) chunk_active,coalesce(cs.legal_status,\'现行\') chunk_legal_status,cs.note chunk_note FROM kb_chunks k JOIN kb_sources s ON s.id=k.source_id LEFT JOIN chunk_states cs ON cs.chunk_id=k.chunk_id ORDER BY k.chunk_id')
         self.tfs=[Counter(tokens(c['text'])) for c in self.chunks]
         self.df=Counter(t for tf in self.tfs for t in tf)
         self.avg=sum(sum(tf.values()) for tf in self.tfs)/max(1,len(self.tfs))
@@ -182,6 +190,8 @@ class Knowledge:
         required=canonical(requested.group()) if requested else None
         specific=[t for t in ['临边','楼梯','接地','连墙件','安全帽','有限空间','模板','起重'] if t in query]
         for i,c in enumerate(self.chunks):
+            if not c['chunk_active']:continue
+            if c['chunk_legal_status']!='现行' and not include_history:continue
             if source_id and c['source_id']!=int(source_id):continue
             if c['status']!='现行' and not (include_history and c['status']=='历史版本'):continue
             if for_document and not cite_allowed(c):continue
@@ -198,7 +208,7 @@ class Knowledge:
         if preferred:
             preferred_rows=[i for i in ordered if canonical(self.chunks[i]['doc_no'])==preferred]
             if preferred_rows:ordered=preferred_rows
-        return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i]),'display_status':'已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
+        return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i]),'display_status':self.chunks[i]['chunk_legal_status'] if self.chunks[i]['chunk_legal_status']!='现行' else '已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
 
 def search(*args,**kwargs):return Knowledge().search(*args,**kwargs)
 

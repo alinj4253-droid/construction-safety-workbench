@@ -15,6 +15,7 @@ from backend.app.hazards import router as hazards_router
 from backend.app.chat import router as chat_router
 from backend.app.documents import router as documents_router
 from backend.app.memory import router as memory_router
+from backend.app.handle import router as handle_router
 
 def ok(data=None,message='ok'):return {'code':0,'data':data,'message':message}
 
@@ -29,6 +30,7 @@ app.include_router(hazards_router)
 app.include_router(chat_router)
 app.include_router(documents_router)
 app.include_router(memory_router)
+app.include_router(handle_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:8010','http://localhost:8010'],allow_methods=['GET','POST','DELETE','PATCH'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(HTTPException)
