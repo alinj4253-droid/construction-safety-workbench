@@ -10,6 +10,8 @@ from fastapi.exceptions import RequestValidationError
 from pydantic import BaseModel
 from backend.app import db
 from backend.app.security import current_user,login,digest
+from backend.app.dashboard import router as dashboard_router
+from backend.app.hazards import router as hazards_router
 
 def ok(data=None,message='ok'):return {'code':0,'data':data,'message':message}
 
@@ -19,6 +21,8 @@ async def lifespan(app):
     yield
 
 app=FastAPI(title='施工安全管理工作台',version='1.0.0',lifespan=lifespan)
+app.include_router(dashboard_router)
+app.include_router(hazards_router)
 app.add_middleware(CORSMiddleware,allow_origins=['http://127.0.0.1:8010','http://localhost:8010'],allow_methods=['GET','POST','DELETE','PATCH'],allow_headers=['Authorization','Content-Type'])
 
 @app.exception_handler(HTTPException)

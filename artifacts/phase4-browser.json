@@ -1,0 +1,13 @@
+{
+  "page": "P1",
+  "result": "通过",
+  "checks": [
+    "登录与日期",
+    "四统计卡",
+    "逾期优先",
+    "四快捷入口",
+    "待办复查定位"
+  ],
+  "screenshot": "artifacts/p1-dashboard.png",
+  "browser_errors": []
+}
