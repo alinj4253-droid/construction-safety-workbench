@@ -32,6 +32,7 @@ def create(body:TaskInput,user=Depends(current_user)):
     if facts.get('deadline'):__import__('datetime').date.fromisoformat(facts['deadline'])
     tid=uuid.uuid4().hex
     with db.connect() as c:
+        c.execute('BEGIN IMMEDIATE')
         running=c.execute("SELECT id FROM handle_tasks WHERE hazard_id=? AND status IN ('queued','drafting','rule_check','reviewing','rework')",(h['id'],)).fetchone()
         if running:raise HTTPException(409,'该隐患已有正在办理的任务，请等待现有任务')
         c.execute('INSERT INTO handle_tasks(id,hazard_id,status,steps_json,note,created_by,created_at) VALUES(?,?,?,?,?,?,?)',(tid,h['id'],'queued','[]',body.note,user['id'],db.now()))

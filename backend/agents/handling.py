@@ -25,7 +25,7 @@ def rule_check(draft,facts,evidence):
     if not refs:issues.append(issue('missing_evidence','evidence','没有相关现行原文','请补充并核验适用原文'))
     available={e['chunk_id']:e for e in evidence}
     for cid in refs:
-        current=db.one('SELECT k.*,s.* FROM kb_chunks k JOIN kb_sources s ON s.id=k.source_id WHERE k.chunk_id=?',(cid,))
+        current=db.one("SELECT k.*,s.*,coalesce(cs.active,1) chunk_active,coalesce(cs.legal_status,'现行') chunk_legal_status FROM kb_chunks k JOIN kb_sources s ON s.id=k.source_id LEFT JOIN chunk_states cs ON cs.chunk_id=k.chunk_id WHERE k.chunk_id=?",(cid,))
         if cid not in available or not current:issues.append(issue('missing_chunk',str(cid),'引用不在本次检索证据或不存在','使用本次已检索到的真实片段'));continue
         if not cite_allowed(current):issues.append(issue('invalid_source',str(cid),'版本、审核、类型或地域不满足引用规则','替换为现行、已核验、适用地域的法规原文'))
         if current['text']!=available[cid]['text']:issues.append(issue('changed_evidence',str(cid),'依据正文已更新','重新检索并复核'))
@@ -34,6 +34,8 @@ def rule_check(draft,facts,evidence):
     # A model may never embed a version or clause outside the supplied evidence.
     for no in re.findall(r'(?:JGJ/?T?|GB/?T?|DBJ/?T?)\s*[\d/-]+',draft.get('body',''),flags=re.I):
         if not any(canonical(no)==canonical(e['doc_no']) for e in evidence):issues.append(issue('unsupported_standard','body',no,'删除未提供原文的标准引用'))
+    for clause in re.findall(r'(?<!\d)\d{1,2}\.\d{1,2}\.\d{1,2}(?!\d)|第[一二三四五六七八九十百零〇\d]+条',draft.get('body','')):
+        if not any(clause==e['section'] or clause in e['text'] for e in evidence):issues.append(issue('unsupported_clause','body',clause,'删除不在本次原文中的条号，不得编造条款'))
     return issues
 
 def local_draft(facts,evidence):

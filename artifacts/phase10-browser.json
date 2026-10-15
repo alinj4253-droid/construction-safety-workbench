@@ -1,0 +1,13 @@
+{
+  "result": "通过",
+  "checks": [
+    "错误凭证拒绝",
+    "刷新恢复身份会话",
+    "切换总监督办视角",
+    "P3与P6只读权限",
+    "会话记忆隔离",
+    "个人信息与记忆弹窗"
+  ],
+  "browser_errors": [],
+  "screenshot": "artifacts/identity-director.png"
+}

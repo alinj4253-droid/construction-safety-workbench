@@ -26,6 +26,8 @@ BUILD_SIGNATURE=hashlib.sha256(b''.join(p.read_bytes() for p in sorted((db.ROOT/
 @asynccontextmanager
 async def lifespan(app):
     db.init_db()
+    from backend.app.recovery import recover_interrupted
+    recover_interrupted()
     yield
 
 app=FastAPI(title='施工安全管理工作台',version='1.0.0',lifespan=lifespan)
