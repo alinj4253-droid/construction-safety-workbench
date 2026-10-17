@@ -1,0 +1,114 @@
+﻿施工安全管理工作台——系统启动说明
+
+一、当前电脑快速启动
+
+项目位置：D:\Desktop\ProfPractice
+
+1. 打开上述文件夹，双击 start.bat。
+2. 保持启动窗口打开，等待出现 Uvicorn running on http://127.0.0.1:8010。
+3. 浏览器访问：http://127.0.0.1:8010
+4. 选择登录身份，输入密码。
+
+如果浏览器已经能正常打开系统，就直接使用，不必重复启动。
+当前电脑已准备过虚拟环境和依赖；通常无需重复执行安装步骤。
+
+二、通过 PowerShell 启动（推荐用于排查问题）
+
+打开 PowerShell，逐行执行：
+
+Set-Location -LiteralPath 'D:\Desktop\ProfPractice'
+.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010
+
+看到启动成功提示后，打开：http://127.0.0.1:8010
+停止系统：在启动窗口中按 Ctrl+C，等待服务退出。
+以后再次使用时，重新执行启动命令或双击 start.bat 即可。
+
+三、新电脑或核心 ZIP 解压后的首次安装
+
+1. 安装 Python 3.11。
+2. 解压核心 ZIP，在包含 README.md、backend、frontend、requirements.txt
+   和 start.bat 的那一层文件夹打开 PowerShell。
+   注意：新电脑的解压目录可能不同，不必使用本说明中的 D 盘路径。
+3. 逐行执行下面的命令：
+
+py -3.11 -m venv .venv
+.venv\Scripts\python.exe -m pip install -r requirements.txt
+
+4. 依赖安装成功后，执行：
+
+.venv\Scripts\python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010
+
+5. 浏览器访问：http://127.0.0.1:8010
+
+首次安装依赖需要联网，视觉检测相关依赖较大，请等待安装完成。
+若提示找不到 py，可用已安装的 Python 3.11 的完整路径替代 py -3.11。
+以后无需重复安装依赖，直接按第一节或第二节启动。
+
+四、大模型 API 配置与离线使用
+
+当前原项目目录中的 .env 已单独配置，正常使用时不要覆盖它。
+核心 ZIP 不含真实密钥；新电脑需要自行配置，步骤如下：
+
+1. 如果项目根目录还没有 .env，复制 .env.example，并把副本命名为 .env。
+   文件名必须是 .env，不是 .env.txt。
+2. 用记事本打开 .env，在 OPENAI_API_KEY= 后填写自己的 CloseAI API 密钥。
+3. 其他地址和模型名称可先沿用模板；模型必须是自己账号实际可用的型号。
+4. 保存后重启系统。
+
+没有密钥也可以启动。系统会使用有标识的离线原文检索、模板起草和规则复核。
+如需主动演练离线，可在 .env 中把 LLM_ENABLED=1 改成 LLM_ENABLED=0，
+保存并重启。恢复在线时再改回 1。
+请勿将含真实密钥的 .env 发给他人或提交到 Git。
+
+五、登录账号
+
+AQ20260001：王建国，专职安全员。
+AQ20260002：李文静，安全员。
+AQ20260003：张志强，项目安全总监，主要用于查看与督办。
+
+以上演示账号的初始密码均为：123456
+如果后续修改过密码，请使用修改后的密码。
+
+六、运行文件与数据
+
+请保留以下文件和目录，不要只复制前端 HTML：
+backend、frontend、requirements.txt、backend\data\app.db。
+
+知识资料原文、videos 下的四路视频和以下模型文件也应一同保留：
+construction-safety-inspection\models\helmet_yolo11n\weights\best.pt
+
+核心 ZIP 已包含这些运行资源，但不包含 Python 虚拟环境和真实 API 密钥。
+backend\data\app.db 保存业务数据，日常启动不要删除、重建或覆盖它。
+安装包中的初始数据是演示种子数据，实际办理记录会继续保存在该数据库中。
+备份请先正常停止服务，再复制整个 backend\data 文件夹。
+
+七、常见问题
+
+1. 双击 start.bat 后窗口立即关闭：
+   按第二节在 PowerShell 中启动，查看错误信息；优先检查虚拟环境和依赖是否安装。
+
+2. 提示端口 8010 被占用（WinError 10048）：
+   先访问 http://127.0.0.1:8010，确认是否已有本系统在运行。
+   同一个数据库请只运行一个系统实例，不要反复双击启动。
+   如果端口由其他程序占用，且本系统没有运行，可把命令末尾的 8010 改为 8012，
+   然后访问 http://127.0.0.1:8012。
+
+3. 页面打不开：
+   确认启动窗口仍在运行，地址使用 http 而不是 https，端口与启动命令一致。
+   不要直接双击 frontend\index.html，应通过本地服务地址访问。
+
+4. 提示缺少某个 Python 模块：
+   在项目根目录执行：
+   .venv\Scripts\python.exe -m pip install -r requirements.txt
+
+5. AI 显示“当前为离线兜底结果”：
+   系统仍可使用。若需要在线模型，请检查 .env、账号额度、网络和模型可用性。
+
+6. 监控视频或检测不可用：
+   检查 videos 中的视频、上述 best.pt 权重及视觉依赖是否完整。
+   检测只产生待核实线索，必须人工确认后才能进入隐患台账。
+
+7. 登录状态过期：
+   重新选择账号并登录即可。
+
+更多架构与功能边界，请查看项目中的 README.md。
