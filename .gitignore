@@ -21,5 +21,6 @@ artifacts/tmp/
 Ultralytics/
 artifacts/browser-failure.png
 artifacts/git-log.txt
+frontend/monitor-runtime.local.json
 **/node_modules/
 **/.git/

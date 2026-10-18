@@ -1,0 +1,416 @@
+{
+  "original_service_health_before": {
+    "status": "ok",
+    "version": "1.0.0",
+    "build": "9525b61181174d74"
+  },
+  "original_service_health_after": {
+    "status": "ok",
+    "version": "1.0.0",
+    "build": "9525b61181174d74"
+  },
+  "original_service_unchanged": true,
+  "monitor_service": {
+    "status": "ok",
+    "monitor_version": 2,
+    "build": "621f9336f9cefa64"
+  },
+  "runs": [
+    {
+      "camera_id": "CAM-01",
+      "run_id": "a82ddff8cf7d4ea7acdbb93552a17ab1",
+      "frames": 8,
+      "confidence_threshold": 0.65,
+      "head_targets_per_sample": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "new_clues": 0
+    },
+    {
+      "camera_id": "CAM-02",
+      "run_id": "2c47f00b85054ef891d9a2bc5170dcd9",
+      "frames": 8,
+      "confidence_threshold": 0.65,
+      "head_targets_per_sample": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "new_clues": 0
+    },
+    {
+      "camera_id": "CAM-03",
+      "run_id": "b805d05b2ae74e4282f0d6d2780411ce",
+      "frames": 8,
+      "confidence_threshold": 0.5,
+      "head_targets_per_sample": [
+        1,
+        0,
+        1,
+        1,
+        0,
+        1,
+        1,
+        0
+      ],
+      "new_clues": 0
+    },
+    {
+      "camera_id": "CAM-04",
+      "run_id": "4cc7107bf9dd4db49901cf6cd648bf8e",
+      "frames": 8,
+      "confidence_threshold": 0.65,
+      "head_targets_per_sample": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "new_clues": 0
+    }
+  ],
+  "summary": {
+    "on_site": 0,
+    "violations": 3,
+    "no_helmet": 3,
+    "no_vest": 0,
+    "pending": 7,
+    "peak_hour": "22:00–23:00",
+    "hot_zone": "3#楼二层作业面",
+    "data_mode": "unavailable",
+    "trend": [
+      {
+        "hour": 0,
+        "count": 0
+      },
+      {
+        "hour": 1,
+        "count": 0
+      },
+      {
+        "hour": 2,
+        "count": 0
+      },
+      {
+        "hour": 3,
+        "count": 0
+      },
+      {
+        "hour": 4,
+        "count": 0
+      },
+      {
+        "hour": 5,
+        "count": 0
+      },
+      {
+        "hour": 6,
+        "count": 0
+      },
+      {
+        "hour": 7,
+        "count": 0
+      },
+      {
+        "hour": 8,
+        "count": 0
+      },
+      {
+        "hour": 9,
+        "count": 0
+      },
+      {
+        "hour": 10,
+        "count": 0
+      },
+      {
+        "hour": 11,
+        "count": 0
+      },
+      {
+        "hour": 12,
+        "count": 0
+      },
+      {
+        "hour": 13,
+        "count": 0
+      },
+      {
+        "hour": 14,
+        "count": 0
+      },
+      {
+        "hour": 15,
+        "count": 0
+      },
+      {
+        "hour": 16,
+        "count": 0
+      },
+      {
+        "hour": 17,
+        "count": 0
+      },
+      {
+        "hour": 18,
+        "count": 0
+      },
+      {
+        "hour": 19,
+        "count": 0
+      },
+      {
+        "hour": 20,
+        "count": 0
+      },
+      {
+        "hour": 21,
+        "count": 0
+      },
+      {
+        "hour": 22,
+        "count": 3
+      },
+      {
+        "hour": 23,
+        "count": 0
+      }
+    ],
+    "real": {
+      "violations": 3,
+      "no_helmet": 3,
+      "no_vest": 0,
+      "pending": 3,
+      "pending_today": 3,
+      "confirmed_today": 0,
+      "dismissed_today": 0,
+      "trend": [
+        {
+          "hour": 0,
+          "count": 0
+        },
+        {
+          "hour": 1,
+          "count": 0
+        },
+        {
+          "hour": 2,
+          "count": 0
+        },
+        {
+          "hour": 3,
+          "count": 0
+        },
+        {
+          "hour": 4,
+          "count": 0
+        },
+        {
+          "hour": 5,
+          "count": 0
+        },
+        {
+          "hour": 6,
+          "count": 0
+        },
+        {
+          "hour": 7,
+          "count": 0
+        },
+        {
+          "hour": 8,
+          "count": 0
+        },
+        {
+          "hour": 9,
+          "count": 0
+        },
+        {
+          "hour": 10,
+          "count": 0
+        },
+        {
+          "hour": 11,
+          "count": 0
+        },
+        {
+          "hour": 12,
+          "count": 0
+        },
+        {
+          "hour": 13,
+          "count": 0
+        },
+        {
+          "hour": 14,
+          "count": 0
+        },
+        {
+          "hour": 15,
+          "count": 0
+        },
+        {
+          "hour": 16,
+          "count": 0
+        },
+        {
+          "hour": 17,
+          "count": 0
+        },
+        {
+          "hour": 18,
+          "count": 0
+        },
+        {
+          "hour": 19,
+          "count": 0
+        },
+        {
+          "hour": 20,
+          "count": 0
+        },
+        {
+          "hour": 21,
+          "count": 0
+        },
+        {
+          "hour": 22,
+          "count": 3
+        },
+        {
+          "hour": 23,
+          "count": 0
+        }
+      ]
+    },
+    "demo": {
+      "violations": 0,
+      "no_helmet": 0,
+      "no_vest": 0,
+      "pending": 4,
+      "pending_today": 0,
+      "confirmed_today": 0,
+      "dismissed_today": 0,
+      "trend": [
+        {
+          "hour": 0,
+          "count": 0
+        },
+        {
+          "hour": 1,
+          "count": 0
+        },
+        {
+          "hour": 2,
+          "count": 0
+        },
+        {
+          "hour": 3,
+          "count": 0
+        },
+        {
+          "hour": 4,
+          "count": 0
+        },
+        {
+          "hour": 5,
+          "count": 0
+        },
+        {
+          "hour": 6,
+          "count": 0
+        },
+        {
+          "hour": 7,
+          "count": 0
+        },
+        {
+          "hour": 8,
+          "count": 0
+        },
+        {
+          "hour": 9,
+          "count": 0
+        },
+        {
+          "hour": 10,
+          "count": 0
+        },
+        {
+          "hour": 11,
+          "count": 0
+        },
+        {
+          "hour": 12,
+          "count": 0
+        },
+        {
+          "hour": 13,
+          "count": 0
+        },
+        {
+          "hour": 14,
+          "count": 0
+        },
+        {
+          "hour": 15,
+          "count": 0
+        },
+        {
+          "hour": 16,
+          "count": 0
+        },
+        {
+          "hour": 17,
+          "count": 0
+        },
+        {
+          "hour": 18,
+          "count": 0
+        },
+        {
+          "hour": 19,
+          "count": 0
+        },
+        {
+          "hour": 20,
+          "count": 0
+        },
+        {
+          "hour": 21,
+          "count": 0
+        },
+        {
+          "hour": 22,
+          "count": 0
+        },
+        {
+          "hour": 23,
+          "count": 0
+        }
+      ]
+    },
+    "date": "2026-10-18",
+    "updated_at": "2026-10-18T22:36:15+08:00",
+    "basis": "今日待确认及已确认线索，剔除驳回；待确认另含历史积压。真实与演示分列，头部目标不推算人数。"
+  },
+  "live_frontend_four_results_verified": true,
+  "home_monitor_equal": true,
+  "no_manual_confirmation_or_dismissal_performed": true
+}

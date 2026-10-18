@@ -664,7 +664,7 @@ tr.kb-flash{animation:kbflash 2s ease}
     <section class="page" id="p4">
       <div class="page-head" style="display:flex;align-items:flex-end;gap:14px">
         <div style="flex:1"><div class="t">AI 监控</div>
-          <div class="d">YOLO 视觉引擎 · 回答「多少人、什么时段、哪里」——做统计，不追个案</div></div>
+          <div class="d">四路本地录像 · YOLO 安全帽离线抽帧检测 · 线索经人工确认后入账</div></div>
         <div class="mode-seg">
           <button id="m-normal" class="on" onclick="setMode('normal')">工作模式</button>
           <button id="m-board" onclick="setMode('board')">视察大屏</button>
@@ -674,40 +674,51 @@ tr.kb-flash{animation:kbflash 2s ease}
       <!-- 视察大屏 -->
       <div class="board" id="board">
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:18px">
-          <div style="font-size:16px;font-weight:800;color:#fff">项目安全态势 · 实时大屏</div>
-          <span class="chip orange" style="background:rgba(232,89,12,.18)">AI 识别中</span>
+          <div style="font-size:16px;font-weight:800;color:#fff">项目安全态势 · 观察大屏</div>
+          <span class="chip orange" style="background:rgba(232,89,12,.18)">本地录像 · 离线检测</span>
           <span style="flex:1"></span>
           <span class="mono" style="font-size:11.5px;color:#7B8798" id="clock">10-14 09:42:16</span>
         </div>
         <div class="board-grid">
-          <div class="bstat"><div class="bl">今日在场人数</div><div class="bn">87<small> 人</small></div><div style="font-size:11px;color:#7B8798">门禁+视频融合统计</div></div>
-          <div class="bstat warn"><div class="bl">未戴安全帽</div><div class="bn">3<small> 人次</small></div><div style="font-size:11px;color:#FF922B">较昨日 -2 · 持续下降</div></div>
-          <div class="bstat warn"><div class="bl">未穿反光衣</div><div class="bn">1<small> 人次</small></div><div style="font-size:11px;color:#7B8798">钢筋加工区</div></div>
+          <div class="bstat"><div class="bl">在场人数</div><div class="bn">—</div><div>尚未接入门禁</div></div>
+          <div class="bstat warn"><div class="bl">真实安全帽线索</div><div class="bn">—</div><div>正在读取</div></div>
+          <div class="bstat warn"><div class="bl">线索处理状态</div><div class="bn">—</div><div>正在读取</div></div>
         </div>
         <!-- 多路视频墙 -->
         <div style="display:flex;align-items:center;gap:10px;margin:2px 0 12px">
           <span style="font-size:13px;font-weight:700;color:#C7D0DC">现场画面 · 4 路摄像头</span>
-          <span class="chip" style="background:rgba(61,220,132,.12);color:#3DDC84">本地回放 · 检测结果见抓拍</span>
+          <span class="chip" style="background:rgba(61,220,132,.12);color:#3DDC84">录像回放 / 真实检测帧</span>
           <span style="flex:1"></span>
           <button class="vw-btn" id="patrolBtn" onclick="togglePatrol()">▶ 自动轮巡</button>
+        </div>
+        <div id="monitorTools" class="monitor-tools">
+          <button class="vw-btn" data-detect onclick="runDetection()">检测当前录像</button>
+          <button class="vw-btn" data-detect onclick="runDetection(true)">依次检测四路录像</button>
+          <label>置信度门槛 <select id="monitorConfidence"><option value="0.5">0.50（默认）</option><option value="0.65">0.65（更保守，可能漏检）</option><option value="0.35">0.35（偏召回，误报较多）</option></select></label>
+          <span>远景 / 俯拍最低 0.65；每路全片均匀抽取 8 帧</span>
+          <button class="vw-btn" id="showReplay" onclick="setMonitorView('replay')">录像回放</button>
+          <button class="vw-btn" id="showResults" onclick="setMonitorView('result')">YOLO 检测帧</button>
+          <span id="boardRunStatus" role="status"></span>
         </div>
         <div class="vw-layout">
           <div class="vw-main">
             <video id="vwVideo" src="videos/cam03_workers.mp4" muted loop autoplay playsinline></video>
-            <div class="vw-nosignal" id="vwNoSignal"><div style="font-size:24px">📡</div><div>该路信号缺失 · 演示占位画面</div></div>
+            <img id="vwResult" alt="真实 YOLO 检测帧，含类别、置信度及检测框" onclick="zoomMonitorFrame()" hidden>
+            <div class="vw-nosignal" id="vwNoSignal">录像尚未加载</div>
             <div class="vw-tag" id="vwTag">CAM-03 · 3#楼二层作业面</div>
-            <div class="vw-live">LIVE</div>
+            <div class="vw-live">回放</div>
             <div class="vw-detect" id="vwDetect"></div>
-            <div class="vw-ai-badge">AI 分析中 · 演示叠加</div>
+            <div class="vw-ai-badge">本地录像回放</div>
             <div class="vw-time" id="vwTime">--:--:--</div>
           </div>
           <div class="vw-thumbs" id="vwThumbs"></div>
         </div>
+        <div id="monitorResultPanel" class="monitor-result" aria-live="polite"></div>
         <div class="chart">
-          <div class="ct">未戴安全帽 · 分时段趋势（人次）</div>
+          <div class="ct">真实安全帽线索 · 按检测任务执行时段统计（条）</div>
           <div class="bars" id="bars"></div>
           <div style="margin-top:14px;font-size:11.5px;color:#7B8798;line-height:1.6">
-            ⚠ 高发时段 09:00–10:00（早班换班）· 热点区域 钢筋加工区 / 3#楼东侧 · 数据仅作态势参考，个案需安全员现场确认
+            正在读取统计；录像时间与本次检测执行时间分别展示。
           </div>
         </div>
       </div>

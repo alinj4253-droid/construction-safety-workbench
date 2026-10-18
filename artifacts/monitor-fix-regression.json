@@ -1,0 +1,750 @@
+{
+  "sandbox": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\monitor-fix-wcl4k_gh",
+  "database": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\monitor-fix-wcl4k_gh\\backend\\data\\monitor-test.db",
+  "single_inference_worker": true,
+  "cpu_threads": 1,
+  "source_database_write_forbidden": true,
+  "elapsed_seconds": 26.75,
+  "four_cameras": [
+    {
+      "camera_id": "CAM-01",
+      "run_id": "4a106866567b4848b518e6f5d509e9cc",
+      "status": "done",
+      "frames": [
+        {
+          "id": 1,
+          "media_time": 0.0,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 2,
+          "media_time": 4.98,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 3,
+          "media_time": 9.96,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 4,
+          "media_time": 14.94,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 5,
+          "media_time": 19.94,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 6,
+          "media_time": 24.92,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 7,
+          "media_time": 29.9,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 8,
+          "media_time": 34.88,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "new_clues": 0,
+      "sampling": "均匀抽取全片帧，离线检测，不是实时监控",
+      "duration": 34.9,
+      "confidence_threshold": 0.65,
+      "applicability": "施工远景，头部尺度过小，可能漏检；不适合判定人员佩戴情况",
+      "model_classes": {
+        "0": "hat",
+        "1": "person"
+      }
+    },
+    {
+      "camera_id": "CAM-02",
+      "run_id": "ab885c1e34754a3f9ec73f7a3dd63e37",
+      "status": "done",
+      "frames": [
+        {
+          "id": 9,
+          "media_time": 0.0,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 10,
+          "media_time": 1.768,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 11,
+          "media_time": 3.537,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 12,
+          "media_time": 5.305,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 13,
+          "media_time": 7.04,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 14,
+          "media_time": 8.809,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 15,
+          "media_time": 10.577,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 16,
+          "media_time": 12.346,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "new_clues": 0,
+      "sampling": "均匀抽取全片帧，离线检测，不是实时监控",
+      "duration": 12.379,
+      "confidence_threshold": 0.65,
+      "applicability": "车辆俯拍，通常看不到可辨识头部；不能判断车内人员",
+      "model_classes": {
+        "0": "hat",
+        "1": "person"
+      }
+    },
+    {
+      "camera_id": "CAM-03",
+      "run_id": "d18c25d724614ed38026db394481bcea",
+      "status": "done",
+      "frames": [
+        {
+          "id": 17,
+          "media_time": 0.0,
+          "helmet_on": 1,
+          "helmet_off": 0,
+          "detections": [
+            {
+              "class_id": 0,
+              "label": "佩戴安全帽",
+              "confidence": 0.5806460380554199,
+              "bbox": [
+                1010.8515625,
+                367.2296142578125,
+                1049.0693359375,
+                407.0345458984375
+              ]
+            }
+          ],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 18,
+          "media_time": 1.435,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 19,
+          "media_time": 2.886,
+          "helmet_on": 0,
+          "helmet_off": 1,
+          "detections": [
+            {
+              "class_id": 1,
+              "label": "未佩戴安全帽",
+              "confidence": 0.6431174278259277,
+              "bbox": [
+                829.3884887695312,
+                357.3790283203125,
+                859.9929809570312,
+                397.43804931640625
+              ]
+            }
+          ],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 20,
+          "media_time": 4.321,
+          "helmet_on": 1,
+          "helmet_off": 0,
+          "detections": [
+            {
+              "class_id": 0,
+              "label": "佩戴安全帽",
+              "confidence": 0.512697696685791,
+              "bbox": [
+                826.6524658203125,
+                353.63092041015625,
+                859.541748046875,
+                389.09173583984375
+              ]
+            }
+          ],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 21,
+          "media_time": 5.772,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 22,
+          "media_time": 7.207,
+          "helmet_on": 0,
+          "helmet_off": 1,
+          "detections": [
+            {
+              "class_id": 1,
+              "label": "未佩戴安全帽",
+              "confidence": 0.5312314629554749,
+              "bbox": [
+                620.1885986328125,
+                96.04373168945312,
+                641.8970947265625,
+                127.7342529296875
+              ]
+            }
+          ],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 23,
+          "media_time": 8.659,
+          "helmet_on": 0,
+          "helmet_off": 1,
+          "detections": [
+            {
+              "class_id": 1,
+              "label": "未佩戴安全帽",
+              "confidence": 0.5166270136833191,
+              "bbox": [
+                589.4300537109375,
+                128.81451416015625,
+                609.4837646484375,
+                160.4180908203125
+              ]
+            }
+          ],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 24,
+          "media_time": 10.093,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "new_clues": 3,
+      "sampling": "均匀抽取全片帧，离线检测，不是实时监控",
+      "duration": 10.11,
+      "confidence_threshold": 0.5,
+      "applicability": "人员作业面，具备可辨识头部；仍有遮挡、误报和漏检",
+      "model_classes": {
+        "0": "hat",
+        "1": "person"
+      }
+    },
+    {
+      "camera_id": "CAM-04",
+      "run_id": "6f7aa42dd62c4b6d8acd5cd1b31a8061",
+      "status": "done",
+      "frames": [
+        {
+          "id": 25,
+          "media_time": 0.0,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 26,
+          "media_time": 5.56,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 27,
+          "media_time": 11.12,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 28,
+          "media_time": 16.68,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 29,
+          "media_time": 22.24,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 30,
+          "media_time": 27.8,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 31,
+          "media_time": 33.36,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        },
+        {
+          "id": 32,
+          "media_time": 38.92,
+          "helmet_on": 0,
+          "helmet_off": 0,
+          "detections": [],
+          "width": 1280,
+          "height": 720
+        }
+      ],
+      "new_clues": 0,
+      "sampling": "均匀抽取全片帧，离线检测，不是实时监控",
+      "duration": 38.96,
+      "confidence_threshold": 0.65,
+      "applicability": "高空航拍，头部像素不足，易将背景误识别；不适合安全帽合规判定",
+      "model_classes": {
+        "0": "hat",
+        "1": "person"
+      }
+    }
+  ],
+  "summary": {
+    "on_site": 87,
+    "violations": 6,
+    "no_helmet": 5,
+    "no_vest": 1,
+    "pending": 5,
+    "peak_hour": "09:00–10:00",
+    "hot_zone": "钢筋加工区",
+    "data_mode": "demo",
+    "trend": [
+      {
+        "hour": 0,
+        "count": 0
+      },
+      {
+        "hour": 1,
+        "count": 0
+      },
+      {
+        "hour": 2,
+        "count": 0
+      },
+      {
+        "hour": 3,
+        "count": 0
+      },
+      {
+        "hour": 4,
+        "count": 0
+      },
+      {
+        "hour": 5,
+        "count": 0
+      },
+      {
+        "hour": 6,
+        "count": 0
+      },
+      {
+        "hour": 7,
+        "count": 0
+      },
+      {
+        "hour": 8,
+        "count": 0
+      },
+      {
+        "hour": 9,
+        "count": 2
+      },
+      {
+        "hour": 10,
+        "count": 1
+      },
+      {
+        "hour": 11,
+        "count": 0
+      },
+      {
+        "hour": 12,
+        "count": 0
+      },
+      {
+        "hour": 13,
+        "count": 0
+      },
+      {
+        "hour": 14,
+        "count": 0
+      },
+      {
+        "hour": 15,
+        "count": 0
+      },
+      {
+        "hour": 16,
+        "count": 0
+      },
+      {
+        "hour": 17,
+        "count": 0
+      },
+      {
+        "hour": 18,
+        "count": 0
+      },
+      {
+        "hour": 19,
+        "count": 0
+      },
+      {
+        "hour": 20,
+        "count": 0
+      },
+      {
+        "hour": 21,
+        "count": 0
+      },
+      {
+        "hour": 22,
+        "count": 2
+      },
+      {
+        "hour": 23,
+        "count": 0
+      }
+    ],
+    "real": {
+      "violations": 2,
+      "no_helmet": 2,
+      "no_vest": 0,
+      "pending": 1,
+      "pending_today": 1,
+      "confirmed_today": 1,
+      "dismissed_today": 1,
+      "trend": [
+        {
+          "hour": 0,
+          "count": 0
+        },
+        {
+          "hour": 1,
+          "count": 0
+        },
+        {
+          "hour": 2,
+          "count": 0
+        },
+        {
+          "hour": 3,
+          "count": 0
+        },
+        {
+          "hour": 4,
+          "count": 0
+        },
+        {
+          "hour": 5,
+          "count": 0
+        },
+        {
+          "hour": 6,
+          "count": 0
+        },
+        {
+          "hour": 7,
+          "count": 0
+        },
+        {
+          "hour": 8,
+          "count": 0
+        },
+        {
+          "hour": 9,
+          "count": 0
+        },
+        {
+          "hour": 10,
+          "count": 0
+        },
+        {
+          "hour": 11,
+          "count": 0
+        },
+        {
+          "hour": 12,
+          "count": 0
+        },
+        {
+          "hour": 13,
+          "count": 0
+        },
+        {
+          "hour": 14,
+          "count": 0
+        },
+        {
+          "hour": 15,
+          "count": 0
+        },
+        {
+          "hour": 16,
+          "count": 0
+        },
+        {
+          "hour": 17,
+          "count": 0
+        },
+        {
+          "hour": 18,
+          "count": 0
+        },
+        {
+          "hour": 19,
+          "count": 0
+        },
+        {
+          "hour": 20,
+          "count": 0
+        },
+        {
+          "hour": 21,
+          "count": 0
+        },
+        {
+          "hour": 22,
+          "count": 2
+        },
+        {
+          "hour": 23,
+          "count": 0
+        }
+      ]
+    },
+    "demo": {
+      "violations": 4,
+      "no_helmet": 3,
+      "no_vest": 1,
+      "pending": 4,
+      "pending_today": 4,
+      "confirmed_today": 0,
+      "dismissed_today": 0,
+      "trend": [
+        {
+          "hour": 0,
+          "count": 0
+        },
+        {
+          "hour": 1,
+          "count": 0
+        },
+        {
+          "hour": 2,
+          "count": 0
+        },
+        {
+          "hour": 3,
+          "count": 0
+        },
+        {
+          "hour": 4,
+          "count": 0
+        },
+        {
+          "hour": 5,
+          "count": 0
+        },
+        {
+          "hour": 6,
+          "count": 0
+        },
+        {
+          "hour": 7,
+          "count": 0
+        },
+        {
+          "hour": 8,
+          "count": 0
+        },
+        {
+          "hour": 9,
+          "count": 2
+        },
+        {
+          "hour": 10,
+          "count": 1
+        },
+        {
+          "hour": 11,
+          "count": 0
+        },
+        {
+          "hour": 12,
+          "count": 0
+        },
+        {
+          "hour": 13,
+          "count": 0
+        },
+        {
+          "hour": 14,
+          "count": 0
+        },
+        {
+          "hour": 15,
+          "count": 0
+        },
+        {
+          "hour": 16,
+          "count": 0
+        },
+        {
+          "hour": 17,
+          "count": 0
+        },
+        {
+          "hour": 18,
+          "count": 0
+        },
+        {
+          "hour": 19,
+          "count": 0
+        },
+        {
+          "hour": 20,
+          "count": 0
+        },
+        {
+          "hour": 21,
+          "count": 0
+        },
+        {
+          "hour": 22,
+          "count": 0
+        },
+        {
+          "hour": 23,
+          "count": 0
+        }
+      ]
+    },
+    "date": "2026-10-18",
+    "updated_at": "2026-10-18T22:34:31+08:00",
+    "basis": "今日待确认及已确认线索，剔除驳回；待确认另含历史积压。真实与演示分列，头部目标不推算人数。"
+  },
+  "repeat_new_clues": 0,
+  "manual_confirmation_preserved": true,
+  "home_monitor_equal": true
+}

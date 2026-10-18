@@ -54,24 +54,57 @@ def dismiss(sid:int,body:ConfirmInput,user=Depends(current_user)):
 @router.get('/snapshots/{sid:int}/image')
 def snapshot_image(sid:int,user=Depends(current_user)):
     s=db.one('SELECT image_path FROM monitor_snapshots WHERE id=?',(sid,))
-    if not s or not s['image_path']:raise HTTPException(404,'演示线索没有实际抓拍图片')
+    if not s or not s['image_path'] or not (db.ROOT/s['image_path']).is_file():raise HTTPException(404,'抓拍图片不存在或未生成')
     return FileResponse(db.ROOT/s['image_path'])
 
 class DetectInput(BaseModel):
     camera_id:str='CAM-03'
     max_frames:int=Field(default=8,ge=1,le=60)
+    confidence:float=Field(default=.5,ge=.25,le=.95)
+
+class BatchInput(BaseModel):
+    max_frames:int=Field(default=8,ge=1,le=60)
+    confidence:float=Field(default=.5,ge=.25,le=.95)
+
+@router.post('/detect-all')
+def detect_all(body:BatchInput,user=Depends(current_user)):
+    require_operator(user)
+    missing=[c['id'] for c in CAMERAS if not (db.ROOT/'videos'/c['file']).is_file()]
+    if missing:raise HTTPException(404,'缺少录像：'+', '.join(missing))
+    jobs=[{'id':uuid.uuid4().hex,'camera_id':camera['id']} for camera in CAMERAS]
+    with db.connect() as c:
+        c.execute('BEGIN IMMEDIATE')
+        if c.execute("SELECT id FROM monitor_runs WHERE status IN ('queued','running')").fetchone():raise HTTPException(409,'已有检测任务正在执行，请等待本次完成')
+        for job in jobs:
+            c.execute('INSERT INTO monitor_runs(id,camera_id,status,created_by,created_at) VALUES(?,?,?,?,?)',(job['id'],job['camera_id'],'queued',user['id'],db.now()))
+            db.audit(c,user['id'],'start_detection','monitor_run',job['id'],{'camera_id':job['camera_id'],'max_frames':body.max_frames,'confidence':body.confidence,'batch':True})
+    for job in jobs:pool.submit(process,job['id'],job['camera_id'],body.max_frames,body.confidence)
+    return {'code':0,'data':{'runs':jobs},'message':'四路录像已排队，单任务串行检测'}
 
 @router.post('/detect')
 def detect(body:DetectInput,user=Depends(current_user)):
     require_operator(user)
     if body.camera_id not in {c['id'] for c in CAMERAS}:raise ValueError('摄像头不存在')
+    camera=next(c for c in CAMERAS if c['id']==body.camera_id)
+    if not (db.ROOT/'videos'/camera['file']).is_file():raise HTTPException(404,'本地录像不存在，无法进行真实检测')
     rid=uuid.uuid4().hex
     with db.connect() as c:
         c.execute('BEGIN IMMEDIATE')
         if c.execute("SELECT id FROM monitor_runs WHERE status IN ('queued','running')").fetchone():raise HTTPException(409,'已有检测任务正在执行，请等待本次完成')
         c.execute('INSERT INTO monitor_runs(id,camera_id,status,created_by,created_at) VALUES(?,?,?,?,?)',(rid,body.camera_id,'queued',user['id'],db.now()));db.audit(c,user['id'],'start_detection','monitor_run',rid,body.model_dump())
-    pool.submit(process,rid,body.camera_id,body.max_frames)
+    pool.submit(process,rid,body.camera_id,body.max_frames,body.confidence)
     return {'code':0,'data':{'id':rid},'message':'真实YOLO检测已受理'}
+
+@router.get('/latest')
+def latest(user=Depends(current_user)):
+    items=[]
+    for camera in CAMERAS:
+        r=db.one('SELECT * FROM monitor_runs WHERE camera_id=? ORDER BY created_at DESC,rowid DESC LIMIT 1',(camera['id'],))
+        completed=db.one("SELECT * FROM monitor_runs WHERE camera_id=? AND status='done' ORDER BY created_at DESC,rowid DESC LIMIT 1",(camera['id'],))
+        for item in (r,completed):
+            if item:item['result']=json.loads(item.pop('result_json') or '{}')
+        items.append({'camera_id':camera['id'],'latest':r,'completed':completed})
+    return {'code':0,'data':items,'message':'ok'}
 
 @router.get('/runs/{rid}')
 def run(rid:str,user=Depends(current_user)):
@@ -82,5 +115,5 @@ def run(rid:str,user=Depends(current_user)):
 @router.get('/frames/{fid:int}')
 def frame(fid:int,user=Depends(current_user)):
     f=db.one('SELECT * FROM monitor_frames WHERE id=?',(fid,))
-    if not f:raise HTTPException(404,'检测帧不存在')
+    if not f or not (db.ROOT/f['image_path']).is_file():raise HTTPException(404,'检测帧不存在或图片缺失')
     return FileResponse(db.ROOT/f['image_path'])
