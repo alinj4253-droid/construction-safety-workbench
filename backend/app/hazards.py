@@ -10,7 +10,7 @@ from backend.app import db
 from backend.app.security import current_user,require_operator
 
 router=APIRouter(prefix='/api/hazards')
-def decorated(h):return {**h,'is_demo':bool(h.get('is_demo',False)),'overdue':db.overdue(h),'overdue_days':max(0,(db.today()-__import__('datetime').date.fromisoformat(h['deadline'][:10])).days) if h.get('deadline') and db.overdue(h) else 0}
+def decorated(h):return {**h,'is_demo':bool(h.get('is_demo',False) or (h.get('code') or '').startswith('DEMO-')),'overdue':db.overdue(h),'overdue_days':max(0,(db.today()-__import__('datetime').date.fromisoformat(h['deadline'][:10])).days) if h.get('deadline') and db.overdue(h) else 0}
 
 HAZARD_SELECT='SELECT h.*,CASE WHEN d.hazard_id IS NULL THEN 0 ELSE 1 END is_demo FROM hazards h LEFT JOIN hazard_demo_cases d ON d.hazard_id=h.id'
 
@@ -113,7 +113,7 @@ def act(hid:int,body:ActionInput,user=Depends(current_user)):
                 if c.execute("SELECT id FROM hazard_feedbacks WHERE hazard_id=? AND feedback_source='demo_simulation'",(hid,)).fetchone():raise ValueError('该模拟反馈已登记，退回复查后请代录新的反馈或新建演示案例')
                 if demo['feedback_team']!=h['responsible_team']:raise ValueError('责任班组已变化，不能使用原模拟反馈')
                 note=demo['feedback_content'];team=demo['feedback_team']
-            feedback={'feedback_source':source,'responsible_team':team.strip(),'provided_by':body.feedback_provider.strip() if source!='demo_simulation' else None,'provided_at':body.feedback_at.isoformat() if body.feedback_at and source!='demo_simulation' else None,'is_simulated':bool(demo),'recording_mode':'安全员登记演示模拟反馈' if source=='demo_simulation' else '安全员代录班组反馈'}
+            feedback={'feedback_source':source,'responsible_team':team.strip(),'provided_by':body.feedback_provider.strip() if source!='demo_simulation' else None,'provided_at':body.feedback_at.isoformat() if body.feedback_at and source!='demo_simulation' else None,'is_simulated':bool(demo) or h['code'].startswith('DEMO-'),'recording_mode':'安全员登记演示模拟反馈' if source=='demo_simulation' else '安全员代录班组反馈'}
         status=db.next_status(h['track'],h['status'],body.action,note)
         if feedback:
             feedback['feedback_id']=c.execute('INSERT INTO hazard_feedbacks(hazard_id,content,responsible_team,feedback_source,provided_by,provided_at,recorded_by,recorded_at,is_simulated) VALUES(?,?,?,?,?,?,?,?,?)',(hid,note,feedback['responsible_team'],feedback['feedback_source'],feedback['provided_by'],feedback['provided_at'],user['id'],db.now(),int(feedback['is_simulated']))).lastrowid

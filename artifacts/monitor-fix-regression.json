@@ -1,14 +1,14 @@
 {
-  "sandbox": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\monitor-fix-wcl4k_gh",
-  "database": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\monitor-fix-wcl4k_gh\\backend\\data\\monitor-test.db",
+  "sandbox": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\monitor-fix-kndnlvru",
+  "database": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\monitor-fix-kndnlvru\\backend\\data\\monitor-test.db",
   "single_inference_worker": true,
   "cpu_threads": 1,
   "source_database_write_forbidden": true,
-  "elapsed_seconds": 26.75,
+  "elapsed_seconds": 13.62,
   "four_cameras": [
     {
       "camera_id": "CAM-01",
-      "run_id": "4a106866567b4848b518e6f5d509e9cc",
+      "run_id": "58623e0d665144b0b127115b94b064da",
       "status": "done",
       "frames": [
         {
@@ -96,7 +96,7 @@
     },
     {
       "camera_id": "CAM-02",
-      "run_id": "ab885c1e34754a3f9ec73f7a3dd63e37",
+      "run_id": "67005326e7f74b5aa7d8392f5d530e00",
       "status": "done",
       "frames": [
         {
@@ -184,7 +184,7 @@
     },
     {
       "camera_id": "CAM-03",
-      "run_id": "d18c25d724614ed38026db394481bcea",
+      "run_id": "f955e193226242689075fa3dd420d4e5",
       "status": "done",
       "frames": [
         {
@@ -332,7 +332,7 @@
     },
     {
       "camera_id": "CAM-04",
-      "run_id": "6f7aa42dd62c4b6d8acd5cd1b31a8061",
+      "run_id": "00a3c835ff334afa8b194db65f816286",
       "status": "done",
       "frames": [
         {
@@ -519,11 +519,11 @@
       },
       {
         "hour": 22,
-        "count": 2
+        "count": 0
       },
       {
         "hour": 23,
-        "count": 0
+        "count": 2
       }
     ],
     "real": {
@@ -625,11 +625,11 @@
         },
         {
           "hour": 22,
-          "count": 2
+          "count": 0
         },
         {
           "hour": 23,
-          "count": 0
+          "count": 2
         }
       ]
     },
@@ -741,7 +741,7 @@
       ]
     },
     "date": "2026-10-18",
-    "updated_at": "2026-10-18T22:34:31+08:00",
+    "updated_at": "2026-10-18T23:39:43+08:00",
     "basis": "今日待确认及已确认线索，剔除驳回；待确认另含历史积压。真实与演示分列，头部目标不推算人数。"
   },
   "repeat_new_clues": 0,

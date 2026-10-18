@@ -13,7 +13,7 @@ router=APIRouter(prefix='/api/monitor');pool=ThreadPoolExecutor(max_workers=1,th
 
 @router.get('/overview')
 def overview(user=Depends(current_user)):
-    return {'code':0,'data':{**monitor_summary(),'cameras':[{**c,'url':'/videos/'+c['file'],'available':(db.ROOT/'videos'/c['file']).exists()} for c in CAMERAS],'model_metrics':{'mAP50':.761,'precision':.827,'recall':.698,'scope':'历史训练验证集指标，不等于本次工地现场准确率'},'classes':['佩戴安全帽','未佩戴安全帽'],'vest_mode':'演示数据（模型待训练）'},'message':'ok'}
+    return {'code':0,'data':{**monitor_summary(),'cameras':[{**c,'url':'/videos/'+c['file'],'available':(db.ROOT/'videos'/c['file']).exists(),'playback_prepared':(db.ROOT/'videos/ai_playback'/f"{c['id']}.json").is_file()} for c in CAMERAS],'model_metrics':{'mAP50':.761,'precision':.827,'recall':.698,'scope':'历史训练验证集指标，不等于本次工地现场准确率'},'classes':['佩戴安全帽','未佩戴安全帽'],'vest_mode':'演示数据（模型待训练）'},'message':'ok'}
 
 @router.get('/snapshots')
 def snapshots(status:str='pending',user=Depends(current_user)):
@@ -105,6 +105,12 @@ def latest(user=Depends(current_user)):
             if item:item['result']=json.loads(item.pop('result_json') or '{}')
         items.append({'camera_id':camera['id'],'latest':r,'completed':completed})
     return {'code':0,'data':items,'message':'ok'}
+
+@router.get('/playback/{camera_id}')
+def playback(camera_id:str,user=Depends(current_user)):
+    if camera_id not in {c['id'] for c in CAMERAS}:raise HTTPException(404,'摄像头不存在')
+    from backend.vision.playback import playback as prepared
+    return {'code':0,'data':prepared(camera_id),'message':'ok'}
 
 @router.get('/runs/{rid}')
 def run(rid:str,user=Depends(current_user)):

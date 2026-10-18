@@ -120,7 +120,8 @@ function uploadEvidenceModal(id){openModal('上传现场证据',`<div class="frm
 async function uploadEvidence(id){const file=$('evidenceFile').files[0];if(!file)return toast('请选择证据文件');const form=new FormData();form.append('file',file);form.append('kind',$('evidenceKind').value);await api('/api/hazards/'+id+'/attachments','POST',form);await viewHazard(id);toast('证据已保存并关联隐患');}
 async function exportHz(){await downloadFile('/api/hazards/export?filter='+curF,'隐患迎检台账-'+new Date().toISOString().slice(0,10)+'.csv');toast('已导出当前筛选结果，含留痕、引用及附件索引');}
 let CAMS=[],curCam=2,patrolT=null,monitorFilter='pending',monitorRun=null,monitorTimer=null,imageUrls=[];
-let monitorRoutePromise=null,monitorLatest=[],monitorView='result',monitorFrames={},monitorFrameUrl=null,monitorFrameId=null,monitorImageSeq=0,monitorStarting=false,monitorRefreshBusy=false,monitorFingerprint='';
+let monitorRoutePromise=null,monitorLatest=[],monitorView='overlay',monitorFrames={},monitorFrameUrl=null,monitorFrameId=null,monitorImageSeq=0,monitorStarting=false,monitorRefreshBusy=false,monitorFingerprint='';
+let monitorPlaybackCache={},monitorPlayback=null,monitorPresentedTime=0,monitorOverlayFrame=-1;
 async function monitorOrigin(){
   if(!monitorRoutePromise)monitorRoutePromise=(async()=>{const r=await fetch('/static/monitor-runtime.local.json',{cache:'no-store'});if(r.status===404)return '';if(!r.ok)throw Error('监控连接配置无法读取');const c=await r.json();if(String(c.app_port)!==location.port||!c.api_origin)return '';const u=new URL(c.api_origin);if(!['127.0.0.1','localhost'].includes(u.hostname)||u.protocol!=='http:')throw Error('监控连接配置无效');return u.origin;})().catch(e=>{monitorRoutePromise=null;throw e;});
   return monitorRoutePromise;
@@ -139,18 +140,21 @@ async function load_p4(){const [m,snaps]=await Promise.all([api('/api/monitor/ov
   imageUrls.forEach(u=>URL.revokeObjectURL(u));imageUrls=[];for(const s of snaps.filter(s=>s.image_path)){const r=await fetch((await monitorOrigin())+'/api/monitor/snapshots/'+s.id+'/image',{headers:{Authorization:'Bearer '+token}});if(r.ok){const u=URL.createObjectURL(await r.blob());imageUrls.push(u);const img=$('snapImg'+s.id);if(img)img.src=u;}}
 
   if(!$('vwVideo').getAttribute('src')?.endsWith(CAMS[curCam].file))switchCam(curCam);await refreshMonitorRuns();}
-function renderThumbs(){$('vwThumbs').innerHTML=CAMS.map((c,i)=>{const entry=monitorLatest.find(x=>x.camera_id===c.id),r=entry?.latest,done=entry?.completed;return `<div class="vw-thumb ${i===curCam?'on':''}" onclick="switchCam(${i})"><video src="${c.url}" muted playsinline preload="metadata"></video><div class="vw-tag">${c.id}</div><div class="vw-live">本地录像</div><div class="cam-result">${!c.available?'录像缺失':r?.status==='running'?'YOLO 检测中':r?.status==='queued'?'等待串行检测':r?.status==='error'?'检测失败':done?'真实检测 '+done.result.frames.length+' 帧':'尚未检测'}</div></div>`;}).join('');}
-function switchCam(i){if(!CAMS[i])return;curCam=i;const c=CAMS[i],v=$('vwVideo');if(!v.getAttribute('src')?.endsWith(c.file))v.src=c.url;$('vwTag').textContent=c.id+' · '+c.location;renderThumbs();renderMonitorResult().catch(e=>toast(e.message));}
+function renderThumbs(){$('vwThumbs').innerHTML=CAMS.map((c,i)=>{const entry=monitorLatest.find(x=>x.camera_id===c.id),r=entry?.latest,done=entry?.completed;return `<div class="vw-thumb ${i===curCam?'on':''}" onclick="switchCam(${i})"><video src="${c.url}" muted playsinline preload="metadata"></video><div class="vw-tag">${c.id}</div><div class="vw-live">本地录像</div><div class="cam-result">${!c.available?'录像缺失':r?.status==='running'?'YOLO 检测中':r?.status==='queued'?'等待串行检测':r?.status==='error'?'检测失败':done?'真实检测 '+done.result.frames.length+' 帧':c.playback_prepared?'离线逐帧回放已准备':'尚未采集线索'}</div></div>`;}).join('');}
+function switchCam(i){if(!CAMS[i])return;curCam=i;monitorPlayback=null;monitorOverlayFrame=-1;$('vwDetect').innerHTML='';const c=CAMS[i],v=$('vwVideo');if(monitorView!=='overlay'&&!v.getAttribute('src')?.endsWith(c.file))v.src=c.url;$('vwTag').textContent=c.id+' · '+c.location;renderThumbs();renderMonitorResult().catch(e=>toast(e.message));}
 function setMonitorView(mode){monitorView=mode;renderMonitorResult().catch(e=>toast(e.message));}
 function togglePatrol(){if(patrolT){clearInterval(patrolT);patrolT=null;$('patrolBtn').textContent='▶ 自动轮巡';}else{patrolT=setInterval(()=>switchCam((curCam+1)%CAMS.length),6000);$('patrolBtn').textContent='⏸ 停止轮巡';}}
 async function renderMonitorResult(){
   const camera=CAMS[curCam];if(!camera)return;const sequence=++monitorImageSeq,entry=monitorLatest.find(x=>x.camera_id===camera.id),run=entry?.completed,frames=run?.result?.frames||[],v=$('vwVideo'),img=$('vwResult'),wall=v.closest('.vw-main');
+  $('showOverlay').classList.toggle('on',monitorView==='overlay');
+  if(monitorView==='overlay'){await showMonitorOverlay(camera,sequence);return;}
+  monitorPlayback=null;$('vwDetect').innerHTML='';
   if(frames.length&&!frames.some(f=>f.id===monitorFrames[camera.id]))monitorFrames[camera.id]=frames.reduce((a,b)=>(b.helmet_off*100+b.helmet_on)>(a.helmet_off*100+a.helmet_on)?b:a).id;
   const f=frames.find(f=>f.id===monitorFrames[camera.id]);$('vwTime').textContent='录像时间 '+(monitorView==='result'&&f?f.media_time.toFixed(2):v.currentTime.toFixed(2))+' 秒';$('showReplay').classList.toggle('on',monitorView==='replay');$('showResults').classList.toggle('on',monitorView==='result');
   $('vwNoSignal').style.display='none';wall.querySelector('.vw-live').textContent=monitorView==='result'?'离线检测帧':'录像回放';wall.querySelector('.vw-ai-badge').textContent=monitorView==='result'?'真实 YOLO · HELMET 戴帽 / NO HELMET 未戴帽':'本地录像回放 · 非实时监控';
   if(!run){$('monitorResultPanel').textContent=(entry?.latest?.status==='error'?'本路检测失败：'+entry.latest.error:'本路尚无已完成的真实 YOLO 结果。点击“检测当前录像”或“依次检测四路录像”。')+' 不能由未检测画面推断安全情况。';}
   else{$('monitorResultPanel').innerHTML=`<b>${esc(camera.id)} · 真实 YOLO 检测结果</b> · 任务 ${esc(run.id.slice(0,12))} · 完成 ${esc(run.finished_at)}<br>${esc(camera.applicability||'')}<br>${esc(run.result.sampling||'旧任务：片段抽帧')} · ${frames.length} 帧 · 置信度门槛 ${run.result.confidence_threshold??'旧任务未记录'} · 本次新增 ${run.result.new_clues} 条待确认线索（不代表人数）<br><label>选择录像时间帧<select id="monitorFrameSelect" onchange="selectMonitorFrame(Number(this.value))">${frames.map((x,i)=>`<option value="${x.id}" ${x.id===f?.id?'selected':''}>第 ${i+1} 帧 · ${x.media_time.toFixed(2)} 秒 · 戴帽 ${x.helmet_on} / 未戴帽 ${x.helmet_off}</option>`).join('')}</select></label><br>${f?`当前帧头部目标：戴帽 ${f.helmet_on} / 未戴帽 ${f.helmet_off}；默认优先展示疑似未戴帽最多帧，可逐帧检查。<br>`:''}${(f?.detections||[]).map(d=>`<span class="det-tag ${d.class_id===1?'off':''}">${esc(d.label)} ${(d.confidence*100).toFixed(1)}%</span>`).join('')}${f&&f.helmet_on+f.helmet_off===0?'<b>本帧未检出可信头部目标，远景、遮挡或尺度可能导致漏检，不能据此判定合规。</b>':''}<br>绿框为戴帽，红框为疑似未戴帽；置信度不是准确率。可点击图片放大，结果仍须人工核实。${entry?.latest?.status==='error'?'<br>最新任务失败，当前保留上次成功结果。':''}`;}
-  if(monitorView==='replay'){img.hidden=true;v.style.display='block';if(camera.available)v.play().catch(()=>{});else showMonitorMissing('本地录像缺失，无法回放或检测');return;}
+  if(monitorView==='replay'){img.hidden=true;v.style.display='block';if(!v.getAttribute('src')?.endsWith(camera.file))v.src=camera.url;if(camera.available)v.play().catch(()=>{});else showMonitorMissing('本地录像缺失，无法回放或检测');return;}
   v.pause();v.style.display='none';if(!f){img.hidden=true;showMonitorMissing('尚无可展示的检测帧；请先执行真实检测');return;}
   if(monitorFrameId===f.id&&img.getAttribute('src')){img.hidden=false;return;}
   img.hidden=true;
@@ -158,11 +162,48 @@ async function renderMonitorResult(){
   catch(e){if(sequence===monitorImageSeq)showMonitorMissing(e.message);}
 }
 function selectMonitorFrame(id){monitorFrames[CAMS[curCam].id]=id;monitorView='result';renderMonitorResult().catch(e=>toast(e.message));}
+async function showMonitorOverlay(camera,sequence){
+  const v=$('vwVideo'),wall=v.closest('.vw-main');$('showReplay').classList.remove('on');$('showResults').classList.remove('on');$('vwResult').hidden=true;$('vwNoSignal').style.display='none';v.style.display='block';
+  if(!monitorPlaybackCache[camera.id]){try{monitorPlaybackCache[camera.id]=await api('/api/monitor/playback/'+camera.id);}catch(e){if(sequence===monitorImageSeq){monitorPlayback=null;$('vwDetect').innerHTML='';showMonitorMissing('逐帧结果读取失败：'+e.message);}return;}}
+  if(sequence!==monitorImageSeq||monitorView!=='overlay'||camera.id!==CAMS[curCam]?.id)return;
+  const data=monitorPlaybackCache[camera.id];monitorPlayback=data.available?data:null;
+  wall.querySelector('.vw-live').textContent='本地回放 · 非实时';
+  wall.querySelector('.vw-ai-badge').textContent=data.available?'真实 YOLO · 离线逐帧检测':'本地回放 · 尚无逐帧结果';
+  if(!data.available){$('vwDetect').innerHTML='';$('monitorResultPanel').textContent=data.reason+'；当前播放原录像，不显示模拟检测框。';if(!v.getAttribute('src')?.endsWith(camera.file))v.src=camera.url;}
+  else{
+    if(v.getAttribute('src')!==data.url){$('vwDetect').innerHTML='';monitorOverlayFrame=-1;v.src=data.url;}
+    $('monitorResultPanel').innerHTML=`<b>${esc(camera.id)} · 本地回放 · AI 检测演示</b><br>真实 ${esc(data.model)} 输出 · ${data.fps} 帧/秒采样 · ${data.frames.length} 帧 · 模型门槛 ${data.threshold} · 非实时监控<br>${esc(camera.applicability)}<br>绿色：佩戴安全帽；橙色：疑似未佩戴安全帽。框定位头部目标，置信度不等于准确率。<br>每个框对应当前实际播放帧；未检出的帧不绘框，不代表现场合规。逐帧回放缓存不自动生成台账或抓拍线索；线索采集请使用“检测当前录像”，并经人工确认。<div id="overlayFrameSummary" class="overlay-summary"></div>`;
+    paintMonitorOverlay(monitorPresentedTime,true);
+  }
+  if(camera.available)v.play().catch(()=>{});else showMonitorMissing('本地录像缺失，无法播放');
+}
+function paintMonitorOverlay(mediaTime,force=false){
+  if(monitorView!=='overlay'||!monitorPlayback||$('vwVideo').seeking)return;
+  const data=monitorPlayback;if(data.camera_id!==CAMS[curCam]?.id||$('vwVideo').getAttribute('src')!==data.url)return;
+  const index=Math.max(0,Math.min(data.frames.length-1,Math.floor(mediaTime*data.fps+.01))),frame=data.frames[index];
+  const v=$('vwVideo'),layer=$('vwDetect'),scale=Math.min(v.clientWidth/data.width,v.clientHeight/data.height),width=data.width*scale,height=data.height*scale;
+  layer.style.left=(v.clientWidth-width)/2+'px';layer.style.top=(v.clientHeight-height)/2+'px';layer.style.width=width+'px';layer.style.height=height+'px';layer.style.right='auto';layer.style.bottom='auto';
+  if(index===monitorOverlayFrame&&!force)return;monitorOverlayFrame=index;layer.dataset.frame=String(index);layer.dataset.camera=data.camera_id;
+  $('vwTime').textContent='录像时间 '+frame.source_time.toFixed(2)+' 秒';
+  layer.innerHTML=frame.detections.map(d=>{const [x1,y1,x2,y2]=d.bbox;return `<div class="dbox ${d.class_id===1?'warn':''}" data-box="${d.bbox.join(',')}" style="left:${x1/data.width*100}%;top:${y1/data.height*100}%;width:${(x2-x1)/data.width*100}%;height:${(y2-y1)/data.height*100}%"><span style="${y1<45?'top:100%;':''}">${esc(d.label)} ${(d.confidence*100).toFixed(1)}%</span></div>`;}).join('');
+  arrangeMonitorLabels(layer);
+  if($('overlayFrameSummary'))$('overlayFrameSummary').textContent=`录像 ${frame.source_time.toFixed(2)} 秒 · 本帧头部目标 ${frame.detections.length} 个（不代表全场人数） · 检测框随帧更新`;
+}
+function arrangeMonitorLabels(layer){const occupied=[],width=layer.clientWidth;Array.from(layer.querySelectorAll('.dbox')).sort((a,b)=>a.offsetLeft-b.offsetLeft).forEach(box=>{const label=box.querySelector('span'),w=label.offsetWidth,h=label.offsetHeight,left=Math.max(0,Math.min(box.offsetLeft,width-w));let top=Math.max(0,box.offsetTop-h-6),attempt=0;while(occupied.some(r=>left<r.left+r.width+4&&left+w+4>r.left&&top<r.top+r.height+4&&top+h+4>r.top)&&attempt++<12){top=top>=h+6?top-h-6:box.offsetTop+box.offsetHeight+6+attempt*(h+4);}label.style.left=left-box.offsetLeft-3+'px';label.style.top=top-box.offsetTop-3+'px';occupied.push({left,top,width:w,height:h});});}
+function monitorFrameCallback(now,metadata){monitorPresentedTime=metadata.mediaTime;paintMonitorOverlay(metadata.mediaTime);$('vwVideo').requestVideoFrameCallback(monitorFrameCallback);}
+if($('vwVideo').requestVideoFrameCallback)$('vwVideo').requestVideoFrameCallback(monitorFrameCallback);
+$('vwVideo').addEventListener('timeupdate',()=>{if(!$('vwVideo').requestVideoFrameCallback){monitorPresentedTime=$('vwVideo').currentTime;paintMonitorOverlay(monitorPresentedTime);}});
+$('vwVideo').addEventListener('seeking',()=>{$('vwDetect').innerHTML='';monitorOverlayFrame=-1;});
+for(const event of ['emptied','loadstart'])$('vwVideo').addEventListener(event,()=>{$('vwDetect').innerHTML='';monitorOverlayFrame=-1;});
+$('vwVideo').addEventListener('loadeddata',()=>{monitorPresentedTime=0;paintMonitorOverlay(0,true);});
+$('vwVideo').addEventListener('seeked',()=>{monitorPresentedTime=$('vwVideo').currentTime;paintMonitorOverlay(monitorPresentedTime,true);});
+new ResizeObserver(()=>paintMonitorOverlay(monitorPresentedTime,true)).observe($('vwVideo'));
+function fullscreenMonitor(){const wall=$('vwVideo').closest('.vw-main');if(document.fullscreenElement)document.exitFullscreen();else wall.requestFullscreen().catch(e=>toast(e.message));}
 function showMonitorMissing(message){$('vwNoSignal').textContent=message;$('vwNoSignal').style.display='flex';}
 function zoomMonitorFrame(){if(!monitorFrameUrl)return;openModal('真实 YOLO 检测帧',`<img src="${monitorFrameUrl}" style="width:100%"><p>录像离线抽帧；HELMET 为戴帽，NO HELMET 为疑似未戴帽。检测可能误报、漏报，须人工核实。</p>`,'<button class="btn" onclick="closeModal()">关闭</button>');}
-$('vwVideo').addEventListener('error',()=>{if(monitorView==='replay'){$('vwVideo').style.display='none';showMonitorMissing('本地录像缺失或格式不支持，未生成虚拟画面');}});
+$('vwVideo').addEventListener('error',()=>{if(monitorView!=='result'){monitorPlayback=null;$('vwDetect').innerHTML='';$('vwVideo').style.display='none';showMonitorMissing('本地录像缺失或格式不支持，未生成虚拟画面');}});
 $('vwResult').addEventListener('error',()=>{if(monitorView==='result'){$('vwResult').hidden=true;monitorFrameId=null;showMonitorMissing('检测图片无法显示，请切换帧或重新检测');}});
-setInterval(()=>{const stamp=new Date().toLocaleString('zh-CN',{hour12:false});$('clock').textContent='系统时间 '+stamp;const f=monitorLatest.find(x=>x.camera_id===CAMS[curCam]?.id)?.completed?.result.frames.find(x=>x.id===monitorFrames[CAMS[curCam]?.id]);$('vwTime').textContent='录像时间 '+(monitorView==='result'&&f?f.media_time.toFixed(2):$('vwVideo').currentTime.toFixed(2))+' 秒';},1000);
+setInterval(()=>{const stamp=new Date().toLocaleString('zh-CN',{hour12:false});$('clock').textContent='系统时间 '+stamp;const f=monitorLatest.find(x=>x.camera_id===CAMS[curCam]?.id)?.completed?.result.frames.find(x=>x.id===monitorFrames[CAMS[curCam]?.id]);$('vwTime').textContent='录像时间 '+(monitorView==='result'&&f?f.media_time.toFixed(2):(monitorView==='overlay'&&monitorPlayback?.frames[monitorOverlayFrame]?monitorPlayback.frames[monitorOverlayFrame].source_time:$('vwVideo').currentTime).toFixed(2))+' 秒';},1000);
 function confirmSnap(id){openModal('现场确认监控线索',`<div class="frm"><p>AI 抓拍只是一条线索，请记录实际现场核实结果。</p><label>现场核实记录 *</label><textarea id="snapshotNote" placeholder="填写确认经过、实际情况，不能只填写“模型认为有问题”"></textarea></div>`,`<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="snapshotAction(${id},'confirm')">已现场核实，创建轻轨隐患</button>`);}
 function dismissSnap(id){openModal('驳回误报线索','<div class="frm"><label>误报或驳回原因 *</label><textarea id="snapshotNote"></textarea></div>',`<button class="btn" onclick="closeModal()">取消</button><button class="btn primary" onclick="snapshotAction(${id},'dismiss')">记录驳回，不入台账</button>`);}
 async function snapshotAction(id,action){const result=await api('/api/monitor/snapshots/'+id+'/'+action,'POST',{note:$('snapshotNote').value});closeModal();await load_p4();await load_p1();toast(action==='confirm'?'现场确认后已创建轻轨隐患':'已驳回并留痕，未创建隐患');}
@@ -204,4 +245,4 @@ async function kbRollback(id){await api('/api/kb/changelog/'+id+'/undo','POST',{
 
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
 window.addEventListener('unhandledrejection',e=>{toast(e.reason?.message||'操作未完成，请重试');e.preventDefault();});
-(async()=>{const users=(await api('/api/auth/users')).filter(u=>u.username==='AQ20260001');$('lgUser').innerHTML=users.map(u=>`<option value="${esc(u.username)}">${esc(u.display_name)} · ${esc(u.role)}（工号 ${esc(u.employee_no)}）</option>`).join('');document.querySelector('.lg-tip').textContent='王建国 · 专职安全员 · 初始密码 123456 · 操作按当前身份留痕';if(token){try{CUR_USER=await api('/api/auth/me');if(CUR_USER.username!=='AQ20260001'){await toLogin('本轮演示使用王建国身份，请重新登录');return;}applyUser();$('loginGate').classList.remove('on');go('p1');}catch{token='';localStorage.removeItem('safety_token');}}})();
+(async()=>{const runtime=await api('/api/runtime');if(runtime.demo_generation&&localStorage.getItem('safety_demo_generation')!==runtime.demo_generation){Object.keys(localStorage).filter(k=>k.startsWith('safety_')).forEach(k=>localStorage.removeItem(k));token='';curSessId=null;localStorage.setItem('safety_demo_generation',runtime.demo_generation);}const users=(await api('/api/auth/users')).filter(u=>u.username==='AQ20260001');$('lgUser').innerHTML=users.map(u=>`<option value="${esc(u.username)}">${esc(u.display_name)} · ${esc(u.role)}（工号 ${esc(u.employee_no)}）</option>`).join('');document.querySelector('.lg-tip').textContent='王建国 · 专职安全员 · 初始密码 123456 · 操作按当前身份留痕';if(token){try{CUR_USER=await api('/api/auth/me');if(CUR_USER.username!=='AQ20260001'){await toLogin('本轮演示使用王建国身份，请重新登录');return;}applyUser();$('loginGate').classList.remove('on');go('p1');}catch{token='';localStorage.removeItem('safety_token');}}})();

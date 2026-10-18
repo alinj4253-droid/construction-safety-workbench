@@ -1,0 +1,40 @@
+{
+  "result": "通过",
+  "four_cameras": [
+    {
+      "camera_id": "CAM-01",
+      "playback": true,
+      "frames": 175,
+      "frames_with_heads": 0
+    },
+    {
+      "camera_id": "CAM-02",
+      "playback": true,
+      "frames": 62,
+      "frames_with_heads": 0
+    },
+    {
+      "camera_id": "CAM-03",
+      "playback": true,
+      "frames": 102,
+      "frames_with_heads": 61
+    },
+    {
+      "camera_id": "CAM-04",
+      "playback": true,
+      "frames": 195,
+      "frames_with_heads": 0
+    }
+  ],
+  "frame_exact_coordinates": true,
+  "seek_updates_boxes": true,
+  "playback_updates_boxes": true,
+  "resize_contain_alignment": true,
+  "fullscreen_preserves_overlay": true,
+  "labels_do_not_overlap": true,
+  "automatic_patrol": true,
+  "original_replay_retained": true,
+  "missing_file_clears_boxes": true,
+  "real_model_only": true,
+  "browser_errors": []
+}

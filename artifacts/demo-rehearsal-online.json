@@ -1,0 +1,15 @@
+{
+  "environment": "隔离数据库，读取现有在线模型配置，不使用原库业务数据进行测试写入",
+  "hazard_id": 1,
+  "task_id": "adab458ee5af4eb59769db7a9896cd94",
+  "task_status": "pending_human",
+  "agent_modes": {
+    "a": "online",
+    "b": "online"
+  },
+  "source_database_write_forbidden": true,
+  "result": "通过",
+  "document_id": 1,
+  "final_status": "已销项",
+  "word_export": true
+}

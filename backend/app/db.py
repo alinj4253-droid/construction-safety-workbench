@@ -21,7 +21,14 @@ def today():
     return datetime.now(TZ).date()
 
 def db_path():
-    return Path(os.getenv('APP_DB', str(ROOT / 'backend/data/app.db')))
+    if os.getenv('APP_DB'):return Path(os.environ['APP_DB'])
+    config=ROOT/'backend/data/demo-runtime.json'
+    if config.is_file():
+        active=json.loads(config.read_text(encoding='utf-8'))
+        selected=(ROOT/active['database']).resolve()
+        if active.get('environment')!='demo' or not selected.is_relative_to((ROOT/'backend/data/demo').resolve()) or not selected.is_file():raise ValueError('演示数据库配置无效，拒绝自动选择其他数据库')
+        return selected
+    return ROOT/'backend/data/app.db'
 
 @contextmanager
 def connect():
@@ -72,6 +79,7 @@ def event(c, hazard_id, action, actor, detail=None):
     audit(c, actor, action, 'hazard', hazard_id, detail)
 
 SCHEMA = '''
+CREATE TABLE IF NOT EXISTS runtime_meta(key TEXT PRIMARY KEY,value TEXT NOT NULL);
 CREATE TABLE IF NOT EXISTS users(id INTEGER PRIMARY KEY, username TEXT UNIQUE NOT NULL,password_hash TEXT NOT NULL,display_name TEXT,role TEXT,project TEXT,employee_no TEXT,created_at TEXT);
 CREATE TABLE IF NOT EXISTS tokens(token_hash TEXT PRIMARY KEY,user_id INTEGER REFERENCES users(id),expires_at TEXT);
 CREATE TABLE IF NOT EXISTS hazards(id INTEGER PRIMARY KEY,code TEXT UNIQUE NOT NULL,title TEXT NOT NULL,category TEXT,location TEXT,description TEXT,track TEXT CHECK(track IN('light','heavy')) NOT NULL,level TEXT,status TEXT CHECK(status IN('待确认','待整改','整改中','待复查','已闭环','已销项')) NOT NULL,source TEXT CHECK(source IN('manual','ai_monitor','document')),responsible_team TEXT,responsible_person TEXT,deadline TEXT,rectify_note TEXT,review_note TEXT,created_by INTEGER REFERENCES users(id),created_at TEXT,confirmed_at TEXT,closed_at TEXT,version INTEGER NOT NULL DEFAULT 1);

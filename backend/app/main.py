@@ -57,6 +57,11 @@ class LoginInput(BaseModel):
 @app.get('/api/health')
 def health():return ok({'status':'ok','version':'1.0.0','build':BUILD_SIGNATURE})
 
+@app.get('/api/runtime')
+def runtime():
+    row=db.one("SELECT value FROM runtime_meta WHERE key='demo_generation'")
+    return ok({'demo_generation':row['value'] if row else None,'environment':'demo' if row else 'local'})
+
 @app.get('/api/auth/users')
 def identities():return ok(db.rows('SELECT username,display_name,role,employee_no FROM users ORDER BY id'))
 

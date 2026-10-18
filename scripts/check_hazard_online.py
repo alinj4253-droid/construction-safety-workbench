@@ -1,6 +1,8 @@
 import os
 for name in ('OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','NUMEXPR_NUM_THREADS'):os.environ[name]='1'
 import json
+import argparse
+from contextlib import closing
 import shutil
 import sqlite3
 import sys
@@ -11,6 +13,7 @@ ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 
 def main():
+    parser=argparse.ArgumentParser();parser.add_argument('--clean-demo',action='store_true');args=parser.parse_args()
     info=json.loads((ROOT/'artifacts/hazard-workflow-verification.json').read_text(encoding='utf-8'))
     sandbox=Path(info['sandbox'])
     from backend.app import db
@@ -20,13 +23,17 @@ def main():
         return connect(database,*args,**kwargs)
     sqlite3.connect=guarded
     if not (ROOT/'.env').is_file():raise RuntimeError('未配置在线模型，本脚本不能伪造在线验证成功')
+    if args.clean_demo:
+        output=sandbox/'backend/data'/('demo-rehearsal-'+__import__('uuid').uuid4().hex+'.db')
+        with closing(connect(original.as_uri()+'?mode=ro',uri=True)) as source,closing(connect(output)) as target:source.backup(target)
+        info['database']=str(output)
     shutil.copy2(ROOT/'.env',sandbox/'.env')
     db.ROOT=sandbox;os.environ['APP_DB']=info['database'];os.environ['LLM_ENABLED']='1'
     from fastapi.testclient import TestClient
     from backend.app.main import app
     with TestClient(app) as c:
         c.headers['Authorization']='Bearer '+c.post('/api/auth/login',json={'username':'AQ20260001','password':'123456'}).json()['data']['token']
-        h=c.post('/api/hazards/demo-cases',json={'confirmed':True}).json()['data'];hid=h['id']
+        h=c.get('/api/hazards/1').json()['data'] if args.clean_demo else c.post('/api/hazards/demo-cases',json={'confirmed':True}).json()['data'];hid=h['id']
         response=c.post('/api/handle/tasks',json={'hazard_id':hid});assert response.status_code==200,response.text
         tid=response.json()['data']['task_id'];deadline=time.monotonic()+240
         while time.monotonic()<deadline:
@@ -44,7 +51,7 @@ def main():
             assert c.get(f'/api/documents/{did}/export').content.startswith(b'PK')
             report.update(result='通过',document_id=did,final_status='已销项',word_export=True)
         else:report.update(result='未通过在线验证',blocking_issues=[p.get('type') for r in document.get('reviews',[]) for p in json.loads(r['result_json']).get('issues',[]) if p.get('block')])
-        (ROOT/'artifacts/hazard-workflow-online.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(report,ensure_ascii=False))
+        (ROOT/'artifacts'/('demo-rehearsal-online.json' if args.clean_demo else 'hazard-workflow-online.json')).write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(report,ensure_ascii=False))
         return 0 if report['result']=='通过' else 1
 
 if __name__=='__main__':raise SystemExit(main())
