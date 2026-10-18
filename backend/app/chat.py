@@ -9,8 +9,10 @@ from pydantic import BaseModel,Field
 from backend.app import db
 from backend.app.security import current_user
 from backend.app.llm import ask_json
-from backend.rag.knowledge import search
+from backend.rag.knowledge import search,cite_allowed,region_applies,canonical
 from backend.app.memory import context as memory_context,remember
+from backend.rag.query import resolve_query,memory_intent
+from backend.app.answers import build_answer,answer_intro,evidence_label
 router=APIRouter()
 pool=ThreadPoolExecutor(max_workers=4,thread_name_prefix='safety-chat')
 
@@ -41,53 +43,52 @@ def delete_session(sid:str,user=Depends(current_user)):
         c.execute('DELETE FROM chat_sessions WHERE id=?',(sid,));db.audit(c,user['id'],'delete_session','session',sid)
     return {'code':0,'data':None,'message':'ok'}
 
-def grounded_answer(question,evidence,history=None):
-    if not evidence:return '知识库中未检索到相关依据。请补充作业类型或上传并核验相关原文，我不会编造条款。',[],{'mode':'offline','reason':'无相关证据，未调用生成模型'}
-    choice,meta=ask_json('你是法规检索助手。根据问题和历史，选择最能直接回答问题的原文片段，最多3条。不得改写或补造条款。输出 {"evidence_ids":["chunk_id"]}。',{'question':question,'history':history or [],'evidence':[{k:e.get(k) for k in ['chunk_id','doc_no','section','text']} for e in evidence]},max_tokens=600)
-    selected=[]
-    if choice:
-        ids=choice.get('evidence_ids',[])
-        selected=[e for e in evidence if e['chunk_id'] in ids][:3]
-    selected=([evidence[0]]+[e for e in selected if e['chunk_id']!=evidence[0]['chunk_id']])[:3] if selected else evidence[:3]
-    # Only original source text is emitted. A model cannot introduce an unverified clause.
-    lines=['根据已核验的知识库原文，检索到以下依据：']
-    for i,e in enumerate(selected,1):
-        lines.append(f"\n{i}.《{e['name']}》 {e['doc_no']} {e['section']}（{evidence_label(e)}）\n{e['text']}")
-    lines.append('\n请结合现场实际、适用范围及专项方案人工核对；以上为原文检索结果。')
-    return '\n'.join(lines),selected,meta
+def grounded_answer(question,evidence,history=None,profile=None):
+    return build_answer(question,evidence,history,ask_json,profile)
 
-def evidence_label(e):
-    semantic={'法规依据':'法规原文，适用范围仍需人工核对','项目资料':'项目内部执行资料，不作为法规依据','案例参考':'仅供学习警示，不作为法规依据'}
-    return e['display_status']+'；'+semantic[e['category']]
+def references_current(references,regulatory_only):
+    for ref in references:
+        current=db.one("SELECT k.source_id,k.text,k.section,s.*,coalesce(cs.active,1) chunk_active,coalesce(cs.legal_status,'现行') chunk_legal_status FROM kb_chunks k JOIN kb_sources s ON s.id=k.source_id LEFT JOIN chunk_states cs ON cs.chunk_id=k.chunk_id WHERE k.chunk_id=?",(ref['chunk_id'],))
+        if not current or any(current[k]!=ref[k] for k in ('source_id','text','section','name')) or canonical(current['doc_no'])!=canonical(ref['doc_no']):return False
+        if not current['chunk_active'] or current['chunk_legal_status']!='现行' or current['status']!='现行' or current['legal_status']!='现行' or not current['parsed'] or not region_applies(current):return False
+        if current['effective_date'] and current['effective_date']>str(db.today()):return False
+        if regulatory_only and not cite_allowed(current):return False
+    return True
 
-def run_chat(run_id,question,sid,source_id):
+def run_chat(run_id,question,sid,source_id,message_id=None):
     try:
         owner=db.one('SELECT user_id FROM chat_sessions WHERE id=?',(sid,))['user_id']
-        memory=memory_context(owner,sid)
+        memory=memory_context(owner,sid,message_id)
         history=memory['recent_messages']
-        retrieval=question
-        if any(x in question for x in ['上述','这个','它的','那条','再解释']) and len(question)<25:
-            previous=[m['content'] for m in history[:-1] if m['role']=='user']
-            if previous:retrieval=previous[-1]+' '+question
-        memory_command=question.startswith(('记住','请记住')) or any(x in question for x in ['你记得我','记住了什么','我的项目背景'])
-        evidence=[] if memory_command else search(retrieval,source_id=source_id)
+        prior=db.rows('SELECT id,role,content FROM chat_messages WHERE session_id=? AND role=? '+('AND id<? ' if message_id is not None else '')+'ORDER BY id',(sid,'user',message_id) if message_id is not None else (sid,'user'))
+        profile=resolve_query(question,prior)
+        memory_command=memory_intent(question)
+        selected_source=db.one('SELECT category FROM kb_sources WHERE id=?',(source_id,)) if source_id is not None else None
+        regulatory_only=not selected_source or selected_source['category']=='法规依据'
+        evidence=[] if memory_command or profile['needs_clarification'] else search(question,source_id=source_id,profile=profile,regulatory_only=regulatory_only,applicable_only=True)
         if evidence:
-            e=evidence[0]
-            prelude=f"根据已核验的知识库原文，检索到以下依据：\n\n1.《{e['name']}》 {e['doc_no']} {e['section']}（{evidence_label(e)}）\n{e['text']}"
-            db.write('UPDATE chat_runs SET answer=? WHERE id=?',(prelude,run_id))
-        db.write('UPDATE chat_runs SET status_message=? WHERE id=?',('已完成检索，正在依据原文整理回答',run_id))
-        if question.startswith(('记住','请记住')):
+            db.write('UPDATE chat_runs SET answer=? WHERE id=?',(answer_intro(profile),run_id))
+        status='正在处理当前身份的记忆' if memory_command else '需要澄清当前讨论对象' if profile['needs_clarification'] else '已检索到有效原文，正在组织回答' if evidence else '没有检索到相关有效证据，未调用模型'
+        db.write('UPDATE chat_runs SET status_message=? WHERE id=?',(status,run_id))
+        if memory_command=='remember':
             mid=remember(owner,question,sid,history[-1]['id'] if history else None)
             answer=('已按当前身份保存这条长期记忆：'+question+'。可在“小安的记忆与背景”查看或删除。') if mid else '这条信息涉及密码或密钥，未加入长期记忆。'
-            refs=[];meta={'mode':'offline','reason':'显式记忆操作，不需要调用大模型'}
-        elif any(x in question for x in ['你记得我','记住了什么','我的项目背景']):
+            refs=[];meta={'mode':'memory','reason':'显式记忆操作，不需要调用大模型'}
+        elif memory_command=='recall':
             answer='当前身份的长期记忆（用户提供，未经现场独立核验）：\n'+'\n'.join(m['value'] for m in memory['long_term_user_provided']) if memory['long_term_user_provided'] else '当前身份没有已确认的长期记忆。你可以用“记住……”明确指定。'
-            refs=[];meta={'mode':'offline'}
-        else:answer,refs,meta=grounded_answer(question,evidence,memory)
-        prefix='当前为离线兜底结果\n\n' if meta['mode']=='offline' else f"大模型辅助检索 · {meta['model']}\n\n"
-        answer=answer+'\n\n'+prefix.strip()
+            refs=[];meta={'mode':'memory'}
+        elif profile['needs_clarification']:
+            answer=profile['reason'];refs=[];meta={'mode':'clarification'}
+        else:answer,refs,meta=grounded_answer(question,evidence,memory,profile)
         with db.connect() as c:
+            c.execute('BEGIN IMMEDIATE')
             if not c.execute('SELECT 1 FROM chat_sessions WHERE id=?',(sid,)).fetchone():return
+            if refs and not references_current(refs,regulatory_only):
+                fresh=search(question,source_id=source_id,profile=profile,regulatory_only=regulatory_only,applicable_only=True)
+                answer,refs,meta=build_answer(question,fresh,memory,lambda *args,**kwargs:(None,{'mode':'offline','reason':'整理期间引用效力或正文发生变化，已按当前原文重新核对'}),profile)
+                if not answer.startswith(answer_intro(profile)):answer=answer_intro(profile)+'\n\n'+answer
+            if meta['mode']=='offline':answer+='\n\n当前为离线兜底结果（本地证据整理）：'+meta.get('reason','模型未参与本次整理')+'；以上仍依据检索原文生成。'
+            elif meta['mode']=='online':answer+=f"\n\n大模型辅助选择证据 · {meta['model']}；正文检查项由可追溯原文转换。"
             c.execute('INSERT INTO chat_messages(session_id,role,content,sources,created_at) VALUES(?,?,?,?,?)',(sid,'assistant',answer,db.dumps(refs),db.now()))
             c.execute('UPDATE chat_sessions SET updated_at=? WHERE id=?',(db.now(),sid))
             c.execute('UPDATE chat_runs SET status=?,answer=?,references_json=?,mode=?,status_message=? WHERE id=?',('done',answer,db.dumps(refs),meta['mode'],'回答已保存',run_id))
@@ -105,10 +106,12 @@ def chat(body:ChatInput,user=Depends(current_user)):
     session_for(sid,user)
     rid=uuid.uuid4().hex
     with db.connect() as c:
-        c.execute('INSERT INTO chat_messages(session_id,role,content,created_at) VALUES(?,?,?,?)',(sid,'user',body.message,db.now()))
+        c.execute('BEGIN IMMEDIATE')
+        if c.execute("SELECT 1 FROM chat_runs WHERE session_id=? AND status='running'",(sid,)).fetchone():raise HTTPException(409,'当前会话仍在生成，请完成后继续提问')
+        message_id=c.execute('INSERT INTO chat_messages(session_id,role,content,created_at) VALUES(?,?,?,?)',(sid,'user',body.message,db.now())).lastrowid
         c.execute('INSERT INTO chat_runs(id,session_id,user_id,status,status_message,created_at) VALUES(?,?,?,?,?,?)',(rid,sid,user['id'],'running','正在检索知识库原文',db.now()))
         db.audit(c,user['id'],'ask','session',sid,{'run_id':rid})
-    pool.submit(run_chat,rid,body.message,sid,body.source_id)
+    pool.submit(run_chat,rid,body.message,sid,body.source_id,message_id)
     def stream():
         yield 'data: '+db.dumps({'type':'session','session_id':sid,'run_id':rid})+'\n\n'
         status='';pos=0

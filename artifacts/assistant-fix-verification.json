@@ -1,0 +1,19 @@
+{
+  "pytest_exit_code": 0,
+  "single_process": true,
+  "numeric_threads": 1,
+  "excluded": "原跨进程hash稳定性测试，遵守本轮单进程要求",
+  "source_writable_connections_forbidden": true,
+  "source_database_unchanged": true,
+  "source_database_digest_before": "ec3879533af4ce7187552f61f106d1673bc1f36ae2327c2c130af254cee71ad7",
+  "source_database_digest_after": "ec3879533af4ce7187552f61f106d1673bc1f36ae2327c2c130af254cee71ad7",
+  "knowledge_materials_unchanged": true,
+  "original_index_unchanged": true,
+  "online_turns": 4,
+  "online_modes": [
+    "online",
+    "online",
+    "online",
+    "online"
+  ]
+}

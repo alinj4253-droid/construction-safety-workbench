@@ -18,8 +18,9 @@ def remember(user_id,text,session_id=None,message_id=None):
         db.audit(c,user_id,'remember_explicit','memory',mid,{'source_message_id':message_id})
     return mid
 
-def context(user_id,sid):
-    messages=db.rows('SELECT id,role,content FROM chat_messages WHERE session_id=? ORDER BY id',(sid,))
+def context(user_id,sid,through_message_id=None):
+    if not db.one('SELECT id FROM chat_sessions WHERE id=? AND user_id=?',(sid,user_id)):raise HTTPException(404,'会话不存在')
+    messages=db.rows('SELECT id,role,content FROM chat_messages WHERE session_id=? '+('AND id<=? ' if through_message_id is not None else '')+'ORDER BY id',(sid,through_message_id) if through_message_id is not None else (sid,))
     older=messages[:-RECENT]
     summary=db.one('SELECT * FROM session_summaries WHERE session_id=?',(sid,))
     if older and (not summary or older[-1]['id']>summary['summarized_through']):

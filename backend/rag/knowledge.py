@@ -12,6 +12,7 @@ import numpy as np
 from bs4 import BeautifulSoup
 from pypdf import PdfReader
 from backend.app import db
+from backend.rag.query import analyze_query
 
 CORE={
  'JGJ80-2016_att1.pdf':('建筑施工高处作业安全技术规范','JGJ80-2016','2016-11-01','https://www.mohurd.gov.cn/'),
@@ -148,10 +149,16 @@ def vector(text,dim=512):
         v[int.from_bytes(h[:4],'big')%dim]+=math.log1p(n)
     return v/(np.linalg.norm(v) or 1)
 
-def canonical(no):return re.sub(r'\s+','',no or '').upper()
+def canonical(no):return re.sub(r'\s+','',re.sub(r'[—－–]','-',no or '')).upper()
+
+def region_applies(source,region='厦门'):
+    value=source.get('region') or ''
+    if value in {'国家','全国','国家/全国'}:return True
+    if value in {'福建','福建省'}:return region in {'厦门','厦门市','福建','福建省'}
+    return bool(value and (value==region or region in value))
 
 def cite_allowed(source,region='厦门',relations=None):
-    applicable=source.get('region','') in {'国家','全国','福建','福建省','厦门','厦门市','国家/全国'} or region in source.get('region','')
+    applicable=region_applies(source,region)
     withdrawn=source.get('section') in CLAUSE_WITHDRAWALS.get(canonical(source.get('doc_no')),set())
     if relations is None:relations=db.rows('SELECT * FROM version_rules')
     replaced=any(canonical(r['old_no'])==canonical(source.get('doc_no')) and r['effective_date']<=str(db.today()) for r in relations)
@@ -183,15 +190,14 @@ class Knowledge:
         scores=self.vectors@vector(query)
         return sorted(enumerate(map(float,scores)),key=lambda x:(-x[1],self.chunks[x[0]]['chunk_id']))
 
-    def search(self,query,limit=5,for_document=False,source_id=None,include_history=False):
+    def search(self,query,limit=5,for_document=False,source_id=None,include_history=False,profile=None,regulatory_only=False,region='厦门',applicable_only=False):
         overview=bool(source_id and '核心要求' in query)
-        query=query.replace('临电','临时用电').replace('基坑边','基坑临边')
-        query=re.sub(r'有什么要求|有哪些要求|是什么|请问|的设置要求|有什么|具体要求|什么要求','',query)
-        qt=set(tokens(query));preferred='JGJ80-2016' if any(x in query for x in ['临边','防护栏杆','楼梯口','高处']) else 'JGJ/T46-2024' if any(x in query for x in ['用电','接地','接零','TN-S']) else None
+        profile=profile or analyze_query(query)
+        ranking_query=profile['query']
+        qt=set(tokens(ranking_query))
         eligible=set()
-        requested=re.search(r'(?:JGJ/?T?|GB/?T?|DBJ/?T?)[\s\d/-]+\d',query,re.I)
-        required=canonical(requested.group()) if requested else None
-        specific=[t for t in ['临边','楼梯','接地','连墙件','安全帽','有限空间','模板','起重'] if t in query]
+        required={canonical(no) for no in profile['standard_numbers']}
+        section=re.search(r'(?<!\d)\d+\.\d+\.\d+(?!\d)',query)
         relations=db.rows('SELECT * FROM version_rules WHERE effective_date<=?',(str(db.today()),))
         for i,c in enumerate(self.chunks):
             replaced=any(canonical(r['old_no'])==canonical(c['doc_no']) for r in relations)
@@ -201,26 +207,39 @@ class Knowledge:
             if c['legal_status']!='现行' and not include_history:continue
             if c['effective_date'] and c['effective_date']>str(db.today()) and not include_history:continue
             if c['chunk_legal_status']!='现行' and not include_history:continue
-            if source_id and c['source_id']!=int(source_id):continue
+            if source_id is not None and c['source_id']!=int(source_id):continue
             if c['status']!='现行' and not (include_history and c['status']=='历史版本'):continue
-            if for_document and not cite_allowed(c,relations=relations):continue
-            if required and required!=canonical(c['doc_no']):continue
-            if specific and not any(t in c['text'] for t in specific):continue
+            if applicable_only and not region_applies(c,region):continue
+            if (for_document or regulatory_only) and not cite_allowed(c,region=region,relations=relations):continue
+            if required and canonical(c['doc_no']) not in required:continue
+            if section and required and section.group()!=c['section']:continue
+            if profile['kind']=='edge' and any(w in c['text'] for w in ('楼梯','梯段')) and not any(w in c['text'] for w in ('临边','周边','边沿')):continue
+            if profile['kind']=='edge' and '基坑' in profile['subject'] and any(w in c['name'] for w in ('脚手架','模板','起重','临时用电')) and '基坑' not in c['text']:continue
+            if profile['kind']=='electric' and any(w in c['name'] for w in ('脚手架','起重机械','塔式起重')) and '临时用电' not in c['text']:continue
+            if profile['groups'] and not all(any(term.lower() in c['text'].lower() for term in group) for group in profile['groups']):continue
             overlap=qt.intersection(self.tfs[i])
-            if not overview and (len(overlap)<min(2,len(qt)) or len(overlap)/max(1,len(qt))<.35):continue
+            source_lookup=bool(required and not ranking_query)
+            if not overview and not source_lookup:
+                if not qt or not overlap:continue
+                if not profile['groups'] and (len(overlap)<min(2,len(qt)) or len(overlap)/len(qt)<.35):continue
             eligible.add(i)
-        if overview:
+        if overview or (required and not ranking_query):
             ordered=sorted(eligible,key=lambda i:(self.chunks[i]['page'],self.chunks[i]['chunk_id']))[:limit]
-            return [{**self.chunks[i],'score':0,'citation_eligible':cite_allowed(self.chunks[i],relations=relations),'display_status':self.chunks[i]['status']} for i in ordered]
+            return [{**self.chunks[i],'score':0,'citation_eligible':cite_allowed(self.chunks[i],region=region,relations=relations),'display_status':self.chunks[i]['chunk_legal_status'] if self.chunks[i]['chunk_legal_status']!='现行' else '已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
         fused=Counter()
-        for weight,ranked in [(.55,self.dense(query)),(.45,self.bm25(query))]:
+        for weight,ranked in [(.55,self.dense(ranking_query)),(.45,self.bm25(ranking_query))]:
             filtered=[(i,s) for i,s in ranked if i in eligible and s>0]
             for rank,(i,score) in enumerate(filtered,1):fused[i]+=weight/(60+rank)
-        ordered=sorted(fused,key=lambda i:(-(fused[i]+(.02 if preferred and canonical(self.chunks[i]['doc_no'])==preferred else 0)),self.chunks[i]['chunk_id']))[:limit]
-        if preferred:
-            preferred_rows=[i for i in ordered if canonical(self.chunks[i]['doc_no'])==preferred]
-            if preferred_rows:ordered=preferred_rows
-        return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i],relations=relations),'display_status':self.chunks[i]['chunk_legal_status'] if self.chunks[i]['chunk_legal_status']!='现行' else '已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
+        ordered=sorted(fused,key=lambda i:(-fused[i],self.chunks[i]['chunk_id']))
+        if regulatory_only and source_id is None:
+            distinct=[];remaining=[];seen=set()
+            for i in ordered:
+                key=canonical(self.chunks[i]['doc_no']) or str(self.chunks[i]['source_id'])
+                if key in seen:remaining.append(i)
+                else:distinct.append(i);seen.add(key)
+            ordered=distinct+remaining
+        ordered=ordered[:limit]
+        return [{**self.chunks[i],'score':round(fused[i],8),'citation_eligible':cite_allowed(self.chunks[i],region=region,relations=relations),'display_status':self.chunks[i]['chunk_legal_status'] if self.chunks[i]['chunk_legal_status']!='现行' else '已废止' if self.chunks[i]['legal_status']=='已废止' else self.chunks[i]['status']} for i in ordered]
 
 def search(*args,**kwargs):return Knowledge().search(*args,**kwargs)
 

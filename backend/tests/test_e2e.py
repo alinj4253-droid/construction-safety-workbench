@@ -125,6 +125,7 @@ def test_scenario_4_kb_governance(client):
 def test_scenario_5_offline_fallback(client):
     closed=handling(client)
     answers=[chat(client,q) for q in ['临边防护','临时用电接地','火星量子计算机维修']]
-    assert all(a['mode']=='offline' and '当前为离线兜底结果' in a['answer'] for a in answers)
+    assert all(a['mode']=='offline' and '当前为离线兜底结果' in a['answer'] for a in answers[:2])
+    assert answers[2]['mode']=='no_evidence' and '未检索到相关依据' in answers[2]['answer'] and '离线兜底' not in answers[2]['answer']
     assert closed['final_status']=='已销项'
     RESULTS.append({'scenario':5,'name':'离线降级线','result':'通过','evidence':{'llm_enabled':False,'closed_loop':closed,'answers':answers}})
