@@ -1,0 +1,11 @@
+{
+  "sandbox": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\hazard-workflow-ar33dduk",
+  "database": "D:\\Desktop\\ProfPractice\\artifacts\\tmp\\hazard-workflow-ar33dduk\\backend\\data\\seed.db",
+  "pytest_exit_code": 0,
+  "single_process": true,
+  "cpu_threads": 1,
+  "excluded": "原跨进程排序测试，遵守串行测试要求",
+  "original_database_write_forbidden": true,
+  "original_database_unchanged": false,
+  "live_database_note": "测试期间运行中的主服务存在 POST /api/chat/stream 和监控线索驳回等实际操作。测试连接禁止写原库，原库变化保留，不回滚。"
+}

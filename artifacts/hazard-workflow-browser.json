@@ -1,0 +1,18 @@
+{
+  "result": "通过",
+  "three_steps": false,
+  "demo_hazard_id": 13,
+  "document_id": 3,
+  "repeat_demo_id": 14,
+  "ordinary_hazard_id": 15,
+  "dual_agent_issue_feedback_review_archive": true,
+  "simulation_labeled_and_no_fake_images": true,
+  "normal_feedback_initially_blank": true,
+  "recorded_by_wang_not_team_account": true,
+  "rectification_image_preview": true,
+  "return_and_second_feedback": true,
+  "closed_record_removed_from_queue": true,
+  "repeat_demo_preserves_archive": true,
+  "word_export": true,
+  "browser_errors": []
+}

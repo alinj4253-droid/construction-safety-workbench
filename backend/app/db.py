@@ -95,6 +95,9 @@ CREATE TABLE IF NOT EXISTS audit_logs(id INTEGER PRIMARY KEY,actor TEXT,action T
 CREATE TABLE IF NOT EXISTS user_memories(id INTEGER PRIMARY KEY,user_id INTEGER REFERENCES users(id),value TEXT,source_session_id TEXT,source_message_id INTEGER,created_at TEXT,updated_at TEXT,active INTEGER DEFAULT 1);
 CREATE TABLE IF NOT EXISTS session_summaries(session_id TEXT PRIMARY KEY REFERENCES chat_sessions(id) ON DELETE CASCADE,summary TEXT,summarized_through INTEGER DEFAULT 0,source_message_ids TEXT DEFAULT '[]',updated_at TEXT);
 CREATE TABLE IF NOT EXISTS task_inputs(task_id TEXT PRIMARY KEY REFERENCES handle_tasks(id),facts_json TEXT,test_case TEXT);
+CREATE TABLE IF NOT EXISTS hazard_demo_cases(hazard_id INTEGER PRIMARY KEY REFERENCES hazards(id),feedback_content TEXT NOT NULL,feedback_team TEXT NOT NULL,prepared_by INTEGER REFERENCES users(id),prepared_at TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS hazard_feedbacks(id INTEGER PRIMARY KEY,hazard_id INTEGER NOT NULL REFERENCES hazards(id),content TEXT NOT NULL,responsible_team TEXT,feedback_source TEXT NOT NULL,provided_by TEXT,provided_at TEXT,recorded_by INTEGER REFERENCES users(id),recorded_at TEXT NOT NULL,is_simulated INTEGER NOT NULL DEFAULT 0);
+CREATE INDEX IF NOT EXISTS idx_feedback_hazard ON hazard_feedbacks(hazard_id,id);
 CREATE TABLE IF NOT EXISTS chunk_states(chunk_id TEXT PRIMARY KEY REFERENCES kb_chunks(chunk_id),active INTEGER DEFAULT 1,legal_status TEXT DEFAULT '现行',note TEXT);
 CREATE TABLE IF NOT EXISTS monitor_runs(id TEXT PRIMARY KEY,camera_id TEXT,status TEXT,result_json TEXT,error TEXT,created_by INTEGER REFERENCES users(id),created_at TEXT,finished_at TEXT);
 CREATE TABLE IF NOT EXISTS monitor_frames(id INTEGER PRIMARY KEY,run_id TEXT REFERENCES monitor_runs(id),camera_id TEXT,media_time REAL,image_path TEXT,detections_json TEXT,created_at TEXT);
