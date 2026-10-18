@@ -1,0 +1,18 @@
+{
+  "backup": "D:\\Desktop\\ProfPractice\\backend\\data\\backups\\before_hazard_feedback_20261018_233319.db",
+  "existing_business_rows_preserved": {
+    "hazards": true,
+    "hazard_events": true,
+    "documents": true,
+    "document_versions": true,
+    "document_reviews": true,
+    "document_citations": true,
+    "attachments": true,
+    "handle_tasks": true
+  },
+  "previously_closed_hazard_ids": [
+    6,
+    1
+  ],
+  "all_preserved": true
+}

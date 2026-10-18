@@ -1,0 +1,12 @@
+{
+  "hazard_id": 7,
+  "code": "DEMO-20261018-BC62DF88",
+  "title": "3#楼东侧基坑临边防护缺失，未设防护栏杆",
+  "status": "待整改",
+  "is_demo": true,
+  "created_at": "2026-10-18T23:33:26+08:00",
+  "feedback_content": "【演示模拟】木工班组已完成3#楼东侧基坑临边防护整改，补设防护栏杆及挡脚板，现申请安全员复查。",
+  "feedback_received": false,
+  "evidence_count": 0,
+  "url": "http://127.0.0.1:8010"
+}
