@@ -21,10 +21,15 @@ def main():
         b.screenshot(name)
     try:
         b=Browser();b.goto('http://127.0.0.1:8013/');b.login()
-        if three:assert b.js("document.querySelector('#lgUser').options.length===1&&document.querySelector('#lgUser').options[0].textContent.includes('王建国')")
+        if three:
+            assert b.js("document.querySelector('#lgUser').options.length===1&&document.querySelector('#lgUser').options[0].textContent.includes('王建国')")
+            b.js("go('p6')");b.wait("document.getElementById('p6Register')!==null")
+            b.click('#p6Register');b.wait("document.getElementById('p3').classList.contains('active')&&document.getElementById('hzD')!==null")
+            b.js('closeModal()')
         b.js("go('p3')");b.wait("document.querySelector('#hzBody tr[data-hazard]')")
+        initial_max=b.js("api('/api/hazards').then(x=>Math.max(...x.items.map(h=>h.id)))")
         b.click('[onclick="prepareDemoModal()"]');b.click('#prepareDemoButton')
-        b.wait("p6Hazard?.is_demo&&document.querySelector('#p6Work [onclick=\"p6Start()\"]')")
+        b.wait(f"p6Hazard?.is_demo&&p6Hazard.id===selectedHazard&&p6Hazard.id>{initial_max}&&document.querySelector('#p6Work [onclick=\"p6Start()\"]')")
         hid=b.js('p6Hazard.id')
         if three:assert b.js("document.querySelectorAll('#p6Work .cc-step').length===3")
         before=b.js("api('/api/hazards').then(x=>x.counts.all)")
@@ -40,6 +45,9 @@ def main():
             assert b.js("document.querySelectorAll('#p6Work .cc-step').length===3")
         word=b.js(f"fetch('/api/documents/{did}/export',{{headers:{{Authorization:'Bearer '+token}}}}).then(async r=>({{ok:r.ok,signature:Array.from(new Uint8Array(await r.arrayBuffer()).slice(0,2))}}))")
         assert word['ok'] and word['signature']==[80,75]
+        if three:
+            b.click(f'#p6Work [onclick="goLedger({hid})"]')
+            b.wait("document.getElementById('p3').classList.contains('active')")
         b.js(f"go('p3');rectifyModal({hid})")
         b.wait("document.getElementById('mTitle').textContent==='登记整改反馈'")
         assert b.js("document.getElementById('mBody').textContent.includes('演示模拟数据，不代表真实班组提交')&&document.getElementById('mBody').textContent.includes('暂无整改证据')")
@@ -80,8 +88,18 @@ def main():
         assert b.js("document.querySelectorAll('[data-feedback]').length===2")
         b.fill('#reviewNote','整改合格');b.click('#mFoot button.primary')
         b.wait(f"HZ.find(x=>x.id==={rid})?.status==='已销项'")
+        if three:
+            ids=b.js("api('/api/hazards?filter=heavy').then(x=>x.items.filter(h=>!['已销项','已闭环'].includes(h.status)).slice(0,2).map(h=>h.id))")
+            assert len(ids)==2
+            first,second=ids
+            b.js(f"closeModal();go('p6');window.workflowOriginalFetch=window.fetch;window.fetch=(url,options)=>url==='/api/hazards/{first}'?new Promise(resolve=>{{window.releaseWorkflowSelection=()=>resolve(window.workflowOriginalFetch(url,options));}}):window.workflowOriginalFetch(url,options);window.workflowStaleSelection=p6Sel({first});true")
+            b.wait("typeof window.releaseWorkflowSelection==='function'")
+            b.js(f'p6Sel({second})');b.wait(f'p6Hazard?.id==={second}&&selectedHazard==={second}')
+            b.js('releaseWorkflowSelection();workflowStaleSelection.then(()=>true)')
+            assert b.js(f'p6Hazard.id==={second}&&selectedHazard==={second}')
+            b.js('window.fetch=window.workflowOriginalFetch')
         assert not b.errors,b.errors
-        report={'result':'通过','three_steps':three,'demo_hazard_id':hid,'document_id':did,'repeat_demo_id':repeat,'ordinary_hazard_id':rid,'dual_agent_issue_feedback_review_archive':True,'simulation_labeled_and_no_fake_images':True,'normal_feedback_initially_blank':True,'recorded_by_wang_not_team_account':True,'rectification_image_preview':True,'return_and_second_feedback':True,'closed_record_removed_from_queue':True,'repeat_demo_preserves_archive':True,'word_export':True,'browser_errors':b.errors}
+        report={'result':'通过','three_steps':three,'demo_hazard_id':hid,'document_id':did,'repeat_demo_id':repeat,'ordinary_hazard_id':rid,'dual_agent_issue_feedback_review_archive':True,'simulation_labeled_and_no_fake_images':True,'normal_feedback_initially_blank':True,'recorded_by_wang_not_team_account':True,'rectification_image_preview':True,'return_and_second_feedback':True,'closed_record_removed_from_queue':True,'repeat_demo_preserves_archive':True,'word_export':True,'stale_selection_ignored':three,'browser_errors':b.errors}
         (ROOT/'artifacts/hazard-workflow-browser.json').write_text(json.dumps(report,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(report,ensure_ascii=False))
     finally:
         if b:b.close()

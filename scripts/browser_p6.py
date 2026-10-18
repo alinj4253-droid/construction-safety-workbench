@@ -21,9 +21,10 @@ try:
     b.js('p6Sign()');assert b.js("document.getElementById('mTitle').textContent==='人工确认签发'")
     b.js('issuePendingDocument('+str(did)+')');b.wait("p6Task?.status==='issued'")
     assert b.js("api('/api/hazards').then(d=>d.counts.all)")==before
-    b.js('p6Feedback()');b.fill('#feedbackNote','已按原文及现场方案完成防护安装，申请现场复查')
-    b.js(f"hazardAction({hid},'submit_rectify',document.getElementById('feedbackNote').value)")
-    b.wait("p6Hazard.status==='待复查'")
+    b.js(f'goLedger({hid});rectifyModal({hid})');b.wait("document.getElementById('rectifyNote')!==null")
+    b.fill('#rectifyNote','安全员代录班组反馈：已按原文及现场方案完成防护安装，申请现场复查')
+    b.click('#receiveFeedbackButton')
+    b.wait(f"HZ.find(h=>h.id==={hid})?.status==='待复查'")
     assert not b.errors,b.errors
     result={'page':'P6','result':'通过','checks':['真实双角色交接','规则与复核意见落库','人工签发二次确认','签发不重复新增隐患','保存草稿','复制到实际剪贴板','提交实际整改反馈','无复核通过误导文案'],'hazard_id':hid,'document_id':did,'browser_errors':b.errors,'screenshot':'artifacts/p6-handling.png'}
     (ROOT/'artifacts/phase6-browser.json').write_text(json.dumps(result,ensure_ascii=False,indent=2),encoding='utf-8');print(json.dumps(result,ensure_ascii=False))

@@ -385,13 +385,11 @@ tr.kb-flash{animation:kbflash 2s ease}
     <div class="lg-sub">SAFETY OPS · 智能安全管理平台</div>
     <div class="lg-field"><label>选择身份</label>
       <select id="lgUser">
-        <option value="0">王建国 · 专职安全员（工号 AQ20260001）</option>
-        <option value="1">李文静 · 安全员（工号 AQ20260002）</option>
-        <option value="2">张志强 · 项目安全总监（工号 AQ20260003）</option>
+        <option value="AQ20260001">王建国 · 专职安全员（工号 AQ20260001）</option>
       </select></div>
     <div class="lg-field"><label>密码</label><input type="password" value="123456" onkeydown="if(event.key==='Enter')doLogin()"></div>
     <button class="lg-btn" onclick="doLogin()">登 录</button>
-    <div class="lg-tip">演示环境 · 任意密码可登录 · 身份用于操作留痕与对话记录归属</div>
+    <div class="lg-tip">王建国 · 专职安全员 · 请使用本地登录密码</div>
     <div class="lg-foot"><span><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--green);margin-right:5px"></span>系统正常运行</span><span>RAG · YOLO · SQLite</span></div>
   </div>
 </div>
@@ -451,7 +449,6 @@ tr.kb-flash{animation:kbflash 2s ease}
     <div class="umenu" id="umenu">
       <div class="umi" onclick="showProfile()">👤 个人信息设置</div>
       <div class="umi" onclick="showMemory()">🧠 小安的记忆与背景</div>
-      <div class="umi" onclick="toLogin('请切换身份重新登录')">🔄 切换其他身份</div>
       <div class="umi" style="color:#FF8787" onclick="toLogin('已退出登录')">⏻ 退出登录</div>
     </div>
   </aside>
@@ -617,14 +614,15 @@ tr.kb-flash{animation:kbflash 2s ease}
 
     <!-- ======== P6 隐患办理 ======== -->
     <section class="page" id="p6">
-      <div class="page-head">
-        <div class="t">隐患办理</div>
-        <div class="d">双 Agent 协作 · 人工确认签发 · 全程留痕可溯 · 签发后自动写入隐患台账（重轨）</div>
+      <div class="page-head" style="display:flex;align-items:center;gap:14px">
+        <div style="flex:1"><div class="t">隐患办理</div>
+        <div class="d">双 Agent 协作 · 人工确认签发并入账 · 整改反馈与复查在隐患台账完成</div></div>
+        <button id="p6Register" class="btn" onclick="goLedgerRegister()">去台账登记</button>
       </div>
       <div class="grid" style="grid-template-columns:1fr 300px;align-items:start">
         <div id="p6Work"></div>
         <div style="display:flex;flex-direction:column;gap:14px">
-          <div class="card"><div class="card-h"><span class="t">待办理隐患</span><span class="chip orange">3 项</span></div>
+          <div class="card"><div class="card-h"><span class="t">待办理隐患</span><span class="chip orange">待加载</span></div>
             <div class="card-b" style="padding:8px 10px" id="p6Queue"></div></div>
           <div class="card"><div class="card-h"><span class="t">协作职责</span></div>
             <div class="card-b" style="font-size:12px;line-height:1.9;color:var(--muted)">

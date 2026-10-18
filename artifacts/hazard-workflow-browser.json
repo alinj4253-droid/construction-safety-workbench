@@ -1,10 +1,10 @@
 {
   "result": "通过",
-  "three_steps": false,
-  "demo_hazard_id": 13,
-  "document_id": 3,
-  "repeat_demo_id": 14,
-  "ordinary_hazard_id": 15,
+  "three_steps": true,
+  "demo_hazard_id": 26,
+  "document_id": 8,
+  "repeat_demo_id": 27,
+  "ordinary_hazard_id": 28,
   "dual_agent_issue_feedback_review_archive": true,
   "simulation_labeled_and_no_fake_images": true,
   "normal_feedback_initially_blank": true,
@@ -14,5 +14,6 @@
   "closed_record_removed_from_queue": true,
   "repeat_demo_preserves_archive": true,
   "word_export": true,
+  "stale_selection_ignored": true,
   "browser_errors": []
 }
