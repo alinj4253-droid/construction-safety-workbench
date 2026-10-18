@@ -36,6 +36,8 @@ def main():
         b.js('goP6(1)');b.wait("p6Hazard?.id===1&&p6Task===null")
         assert b.js("document.querySelectorAll('#p6Work .cc-step').length===3")
         b.screenshot('demo-initial-handling.png')
+        b.js("go('p4');setMode('normal')");b.wait("document.querySelectorAll('[data-snapshot]').length===2")
+        assert b.js("!document.querySelector('#normal .snap-list').textContent.includes('置信度 null')&&document.querySelector('#normal .snap-list').textContent.includes('未提供真实模型置信度')")
         b.js("go('p4');setMode('board');setMonitorView('overlay')");b.wait("monitorPlayback?.camera_id==='CAM-03'&&document.getElementById('vwVideo').readyState>=2")
         index=b.js('monitorPlayback.frames.findIndex(f=>f.detections.some(d=>d.class_id===0)&&f.detections.some(d=>d.class_id===1))')
         assert index>=0
