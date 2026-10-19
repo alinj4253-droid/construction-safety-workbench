@@ -12,7 +12,7 @@ import sys
 import zipfile
 
 ROOT=Path(__file__).resolve().parents[1]
-TEXT={'.py','.js','.html','.css','.txt','.json','.csv','.yaml','.yml','.toml','.ini','.cfg','.bat','.ps1','.xml','.example','.gitignore'}
+TEXT={'.py','.js','.mjs','.cjs','.ts','.tsx','.jsx','.html','.css','.txt','.json','.csv','.yaml','.yml','.toml','.ini','.cfg','.bat','.ps1','.xml','.example','.gitignore','.sql','.sh','.svg'}
 PRIVATE_DIRS={'artifacts','26专业综合实践 final','专业综合实践答辩','.git','.venv','node_modules','__pycache__','.pytest_cache','exports','runs','datasets','dataset','数据集'}
 PATTERNS=[(re.compile(rb'sk-[A-Za-z0-9_-]{20,}'),b'YOUR_API_KEY'),(re.compile(rb'gh[pousr]_[A-Za-z0-9_]{20,}'),b'YOUR_GITHUB_TOKEN'),(re.compile(rb'github_pat_[A-Za-z0-9_]{20,}'),b'YOUR_GITHUB_TOKEN')]
 
