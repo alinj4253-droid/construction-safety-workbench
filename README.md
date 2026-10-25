@@ -1,88 +1,278 @@
-# 施工安全管理工作台
+<div align="center">
 
-六个原型页面已接入 FastAPI + SQLite：工作台、AI 安全助手、隐患办理、隐患台账、AI 监控、知识库。原型文件与两个旧工程源码保留，正式运行入口为 `backend/app/main.py`。
+# 🏗️ Construction Safety Workbench
 
-前端已移除外部字体CDN，沿用原型的本机字体回退（微软雅黑 / 苹方 / 等宽字体），浏览器界面资源可完全本地加载。
+**Grounded AI for construction site safety — every answer traceable to a source clause, every hazard human-verified.**
 
-## 在当前机器启动
+[![CI](https://github.com/alinj4253-droid/construction-safety-workbench/actions/workflows/ci.yml/badge.svg)](https://github.com/alinj4253-droid/construction-safety-workbench/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.11-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20Linux-lightgrey)](#-quick-start)
 
-```powershell
-cd D:\Desktop\ProfPractice
-.venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8010
+A full-stack, offline-capable safety management platform that combines a **RAG assistant grounded in real regulations**, a **dual-agent hazard-handling pipeline**, and **real YOLO helmet detection** — built around a hard rule: *AI never has the final say*.
+
+[中文文档](README_zh-CN.md) · [Quick Start](#-quick-start) · [Demo](#-demo) · [Architecture](#%EF%B8%8F-architecture)
+
+![Workbench demo](docs/assets/demo-workbench.gif)
+
+</div>
+
+---
+
+## 📖 Contents
+
+- [Why this project](#why-this-project)
+- [Core features](#-core-features)
+- [Demo](#-demo)
+- [Architecture](#%EF%B8%8F-architecture)
+- [Quick Start](#-quick-start)
+- [Usage examples](#-usage-examples)
+- [Verified results](#-verified-results)
+- [Honest capability boundaries](#-honest-capability-boundaries)
+- [Project structure](#-project-structure)
+- [Roadmap](#-roadmap)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+## Why this project
+
+Most "AI + safety" demos hallucinate clauses and auto-create hazard records. This project takes the opposite stance — it is built around three non-negotiable product rules:
+
+1. **AI does not invent clauses.** Every assistant answer must cite retrievable source text from a governed knowledge base (76 curated regulation/case sources, 2,745 retained chunks). With no grounds, the assistant refuses.
+2. **Detection is not a ledger entry.** Real YOLO snapshots only become *pending clues*; a human must confirm on-site before anything enters the hazard ledger. Dismissals are logged too.
+3. **Documents require human sign-off.** A dual-agent pipeline (drafting → rule check → independent review, max one rework) produces a document, but only a human issue action makes it effective — each issued document freezes a citation snapshot.
+
+The result is a realistic safety-ops tool: six working pages, full audit trails, honest offline fallbacks, and a Chinese-language knowledge base of national standards (JGJ 80, GB 55034-2022, JGJ/T 46…), Fujian/Xiamen local regulations and accident/enforcement cases.
+
+## ✨ Core features
+
+| Module | What it does |
+|---|---|
+| 📊 **Dashboard (P1)** | Today's to-dos, overdue-first queue, four quick entries, AI-monitor overview |
+| 💬 **AI Safety Assistant (P2)** | Streaming RAG Q&A with clickable citation chips that open the original clause; three draft types (JSA / safety briefing / daily log); short-term context + explicit long-term memory; session history |
+| 🛠️ **Hazard Handling (P6)** | Dual-agent workflow: Agent A drafts → rule check → Agent B independently reviews → human issues; every step persisted, idempotent signing, no duplicate hazards |
+| 📋 **Hazard Ledger (P3)** | Light track (confirm → rectifying → closed) and heavy track (rectify → rectifying → re-check → closed) with re-work loops, derived overdue flags, evidence chain per record, CSV/Excel export |
+| 🎥 **AI Monitor (P4)** | YOLO11n head detection (helmet on / off) on four local cameras with cached frame-by-frame detection playback; snapshots → human confirm/dismiss → ledger; per-camera applicability notes |
+| 📚 **Knowledge Base (P5)** | Upload → pending review → verified workflow; version relations (obsoletes/replaces) checked locally; obsolete clauses (e.g. JGJ 80 articles superseded by GB 55034-2022) are intercepted at citation time |
+
+Plus: PBKDF2-salted accounts with role-based permissions (safety officer / director views), SQLite audit trail, SSE streaming, and a **fully functional offline mode** (`LLM_ENABLED=0`) where retrieval, drafting and rule checks keep working while the UI labels exactly which parts are not model-backed.
+
+## 🎬 Demo
+
+All recordings are real interactions against a seeded demo database ([recorded by this script](scripts/record_readme_demo.py)) — nothing is mocked.
+
+**AI Safety Assistant — grounded answer with citation chips**
+
+![AI assistant demo](docs/assets/demo-ai-assistant.gif)
+
+*(Static fallback: [docs/assets/ai-assistant.png](docs/assets/ai-assistant.png))*
+
+**AI Monitor — YOLO detection playback on local site footage**
+
+![Monitor demo](docs/assets/demo-monitor.gif)
+
+*(Static fallback: [docs/assets/monitor-yolo.png](docs/assets/monitor-yolo.png))*
+
+**Dashboard**
+
+![Dashboard](docs/assets/dashboard.png)
+
+**Hazard ledger — evidence chain detail**
+
+![Hazard ledger](docs/assets/hazard-ledger.png)
+
+## 🏗️ Architecture
+
+```mermaid
+flowchart TB
+    subgraph FE["Frontend — vanilla JS, zero build step"]
+        P1["Dashboard"]
+        P2["AI Assistant"]
+        P6["Hazard Handling"]
+        P3["Hazard Ledger"]
+        P4["AI Monitor"]
+        P5["Knowledge Base"]
+    end
+    subgraph BE["FastAPI backend"]
+        API["REST + SSE routers<br/>(auth · audit · permissions)"]
+        AGENTS["Dual-agent pipeline<br/>drafting → rule check →<br/>independent review → human issue"]
+        RAG["RAG engine<br/>stable hash vectors + BM25,<br/>fused with RRF"]
+        GW["LLM gateway<br/>main model + reviewer model<br/>(any OpenAI-compatible endpoint)"]
+        VIS["Vision module<br/>YOLO11n head detection"]
+    end
+    DB[("SQLite<br/>business ledger & audit")]
+    KB[("SQLite knowledge base<br/>76 sources · 2,745 chunks<br/>+ version governance")]
+    IDX[("index.npz<br/>hash-vector index")]
+    VIDS[("Local camera videos<br/>+ cached detection frames")]
+
+    FE --> API
+    API --> DB
+    API --> RAG
+    RAG --> KB
+    RAG --> IDX
+    API --> AGENTS
+    AGENTS --> GW
+    API --> VIS
+    VIS --> VIDS
 ```
 
-也可以运行 `./start.ps1`。浏览器打开 http://127.0.0.1:8010 。若本轮验收服务仍在运行，直接打开即可；不要同时启动两个实例占用同一端口。
+**Tech stack**
 
-| 工号 | 姓名 | 视角 | 初始密码 |
-|---|---|---|---|
-| AQ20260001 | 王建国 | 专职安全员，可办理、签发、整改与复查 | 123456 |
-| AQ20260002 | 李文静 | 安全员，同上 | 123456 |
-| AQ20260003 | 张志强 | 项目安全总监，可查看、督办和审核知识资料 | 123456 |
+| Layer | Choice |
+|---|---|
+| Backend | Python 3.11 · FastAPI · Uvicorn · Pydantic v2 |
+| Storage | SQLite (WAL, foreign keys, backup API) + NumPy hash-vector index |
+| Retrieval | Stable hash embeddings + BM25 as independent recall channels, fused with Reciprocal Rank Fusion (no pretrained embeddings claimed) |
+| Frontend | Vanilla JS/CSS/HTML — no framework, no build step, fully local assets |
+| AI | OpenAI-compatible LLM gateway (e.g. DeepSeek for drafting, a second model for independent review) · Ultralytics YOLO11n (optional, local) |
+| Documents | python-docx / openpyxl / pypdf |
+| Testing | 81 pytest test cases + browser QA harness (headless Chrome via CDP) |
 
-本地演示账号密码以 PBKDF2 加盐保存，登录令牌仅保存哈希，8小时过期。会话与记忆按账号隔离；同项目隐患和办理文书共同可见。首次交付数据库为6条历史种子隐患、4条独立待确认演示线索，知识资料按实际文件登记。测试业务数据单独保留在 `qa.db`，不会混入交付台账。
+## 🚀 Quick Start
 
-## 大模型与离线运行
+**Prerequisites:** Python 3.11. No database server, no Node, no build step.
 
-根目录 `.env` 已配置用户提供的 CloseAI 密钥，文件被 Git 忽略，切勿提交或分享。配置模板见 `.env.example`。本机已实际验证：
+```bash
+git clone https://github.com/alinj4253-droid/construction-safety-workbench.git
+cd construction-safety-workbench
 
-- OpenAI 兼容地址：`https://api.openai-proxy.org/v1`，平台[官方文档](https://doc.closeai-asia.com/tutorial/library.html)。
-- 办理/检索：`deepseek-v4.1-flash`；独立复核：`doubao-seed-2-1-turbo-260628`。可通过 `LLM_MAIN_MODEL`、`LLM_REVIEW_MODEL` 更换为账号实际可用模型。
-- 网关只读取本仓库 `.env` 与显式环境变量，不加载旧工程父目录的密钥。
+python -3.11 -m venv .venv
+# Windows: .venv\Scripts\python.exe -m pip install -r requirements.txt
+# Linux/macOS:
+python3.11 -m pip install -r requirements.txt
 
-设置 `$env:LLM_ENABLED='0'` 后启动即可演练离线。网络超时、凭证无效或输出格式不合格也会进入有标识的本地兜底：原文检索、模板起草、规则复核继续工作；离线的两角色不宣称已调用模型。
-
-短期上下文保留最近8条消息，较早内容形成最多6000字的可追溯摘录摘要；长期记忆只保存用户明确指定的项目背景，可查看、删除，跨会话保留。密钥和密码不写入长期记忆。记忆不是法规证据，也不能替代现场事实确认。
-
-## 业务约束
-
-- AI 问答展示库内原文和片段定位。没有相关原文时明确拒答；仅有发布公告不能冒充独立规范全文。
-- 轻轨为待确认→整改中→已闭环；重轨为待整改→整改中→待复查→已销项，复查不合格可退回。逾期按上海时区截止日派生，不覆盖业务状态。
-- A 与 B 使用独立调用上下文，规则与复核意见逐轮落库，最多返工一次。未补齐责任方、期限或依据时转人工；签发前再次核验引用与隐患版本。
-- 人工签发更新原隐患并关联唯一编号，不重复创建隐患；重复签发幂等。已签发引用保留快照，不随知识库改写。
-- 真实 YOLO 抓拍只生成待核实线索。必须填写人工现场核实记录才创建轻轨隐患；误报驳回留痕且不入账。
-- 上传知识文件一律待核验。项目资料与案例可供问答参考，但仅有效、已核验、适用地域的法规正文可作为文书引用候选。版本关系检查采用人工登记关系本地比对；撤销管理操作不会恢复已废止法定效力。
-- GB55034-2022 公告废止的 JGJ80 部分强制性条文单独拦截；临边案例使用核对原页的现行4.3.1，不能沿用原型4.1.1。
-
-## 新环境安装与知识库重建
-
-使用 Python 3.11；建议新建独立虚拟环境后安装直接依赖（验收版本另见 `requirements-tested.txt`）：
-
-```powershell
-py -3.11 -m venv .venv
-.venv/Scripts/python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
+cp .env.example .env    # optional — add an OpenAI-compatible key, or leave it and run offline
 ```
 
-在 `.env` 填入自己的密钥；不填也可离线运行。本机视觉依赖复用了旧工程中的兼容 torch / ultralytics 包（通过本地虚拟环境 `.pth`），迁移机器时需重新安装视觉依赖。检测权重路径为 `construction-safety-inspection/models/helmet_yolo11n/weights/best.pt`，本地回放素材位于 `videos/`。缺少这些文件时其他业务继续可用，检测会明确报错。
+Run (or use `start.bat` / `start.ps1` on Windows):
 
-当前机器已保留 `backend/data/app.db`、`index.npz`、OCR缓存及解包后的标准正文。它们和模型/视频是本地交付数据，不纳入 Git。仅克隆 Git 时须另行复制这些本地资产，或重建：
-
-```powershell
-.venv/Scripts/python.exe -m backend.app.db
-.venv/Scripts/python.exe -m backend.rag.knowledge
+```bash
+uvicorn backend.app.main:app --host 127.0.0.1 --port 8010
 ```
 
-首次重建扫描PDF需先安装 PyMuPDF，并在 Windows 安装中文 OCR 语言包，运行 `python scripts/render_source_pdfs.py`；本机使用有 fitz 的系统 Python 完成此步骤。RAR 使用 7-Zip 解包到 `backend/data/extracted/` 后运行 `python scripts/extract_local_standards.py`，再重建索引。无解析能力的旧 DOC 保持待核验，不自动生效。源资料只读，审核结果写入新库。
+Open **http://127.0.0.1:8010** and sign in:
 
-**重建命令用于初始导入，不用于已有生产业务的日常治理**，它会按原料重新核定初始审核状态；日常增量通过知识库页面上传、核验、版本治理。要制作独立的新演示库，可执行 `python -m scripts.prepare_seed --output backend/data/new-demo.db`（拒绝覆盖已存在文件），并用 `APP_DB` 指向它。请先备份数据库再做任何迁移，停服务时可用SQLite备份API复制一致性快照。
+| Account | Role | Password |
+|---|---|---|
+| `AQ20260001` | Safety officer (handle, issue, rectify, re-check) | `123456` |
+| `AQ20260003` | Project safety director (view, supervise, review KB) | `123456` |
 
-## 测试与证据
+Without an LLM key the system runs offline: retrieval, drafting templates and rule checks keep working, and the UI clearly labels which capabilities are not model-backed.
 
-```powershell
-.venv/Scripts/python.exe -m pytest backend/tests -q --junitxml=artifacts/pytest-results.xml
+<details>
+<summary><b>Building the knowledge index & seeding data on a fresh clone</b></summary>
+
+The repo ships the raw knowledge sources (Chinese regulations, standards and cases under `施工安全RAG知识源/`). To rebuild the local SQLite store and retrieval index:
+
+```bash
+python -m backend.app.db              # create schema + seed demo hazards
+python -m backend.rag.knowledge       # rebuild retrieval index (first run needs PyMuPDF: pip install pymupdf)
 ```
 
-测试使用临时SQLite副本或新库，自动关闭大模型。五条业务场景证据写入 `artifacts/e2e-results.json`；场景1的返工使用隔离环境显式注入的错误期限，测试标识写入任务与文书，不在正式业务中故意制造错误，正式接口默认拒绝测试草稿参数。
+For PDF source rendering and RAR extraction helpers see `scripts/render_source_pdfs.py` and `scripts/extract_local_standards.py`. To create an isolated demo store: `python -m scripts.prepare_seed --output backend/data/new-demo.db`, then point `APP_DB` at it.
 
-浏览器验收使用安装的 Google Chrome、`websocket-client`，每次创建独立临时浏览器配置，不操作个人资料。QA服务需先指向独立 `backend/data/qa.db` 并设置 `LLM_ENABLED=0`，监听8011；然后运行 `scripts/browser_p2.py` 至 `browser_p6.py`、`browser_identity.py`。`scripts/browser_cdp.py` 为P1验收（8010）。脚本会创建验收数据，不能对实际业务库运行。每个页面的 JSON 和截图位于 `artifacts/`。
+</details>
 
-线上连通/时延：`python -m scripts.llm_smoke`、`python -m scripts.smoke_stream`；实际双模型任务：`python -m scripts.smoke_handling_online`（会在8010创建明确命名的验收隐患，请使用专门测试库）。真实视频检测：`python scripts/smoke_vision.py`（8011）。
+<details>
+<summary><b>Optional: AI vision detection</b></summary>
 
-详细审读见 [审读与修正记录](docs/审读与修正记录.md)，最终验收见 [最终交付报告](docs/最终交付报告.md)。
+Helmet detection runs locally with Ultralytics YOLO11n. Place trained weights at `construction-safety-inspection/models/helmet_yolo11n/weights/best.pt` and local camera clips under `videos/` (see `backend/vision/detector.py` for camera definitions). Prepare the frame-by-frame cache with `python -m scripts.prepare_monitor_playback`. Without these files, every other feature keeps working and the monitor page states exactly what is missing. Training utilities live in `construction-safety-inspection/scripts/`.
 
-## 当前边界
+</details>
 
-- 支持本机、单服务进程运行，未接真实短信、RTSP、门禁或生产级组织权限；总监与安全员是本地演示账号。正式部署需另行完成账号管理、TLS、运维备份与组织授权。
-- 在场87人为门禁融合的演示值，反光衣线索为演示数据，安全帽两类才有真实模型。mAP50/P/R来自历史训练验证集，不代表现场准确率。实际帧可误检漏检，局部轨迹去重不代表唯一人员统计。
-- RAG为稳定哈希向量与BM25独立召回后RRF融合；未伪称使用预训练语义嵌入。扫描资料只启用已核对条款作为核心依据；大量来源仍待人工核验，原清单63行缺有效URL。缺少全文的JGJ130/JGJ59/JGJ162不能凭空补条款。
-- 大模型输出仍需人工判断。问答采用原文摘录保障出处，复杂跨条款解释能力有限；正式通知单必须人工签发，JSA/交底/日志始终为待审核草稿。
+**Run the test suite**
+
+```bash
+pytest backend/tests -q
+```
+
+## 💬 Usage examples
+
+**Grounded Q&A (assistant refuses without grounds):**
+
+```
+Q: 基坑临边防护有什么要求？        (What are the edge-protection requirements for foundation pits?)
+A: → retrieved clauses with citation chips:
+   JGJ80-2016 · 4.3.1  (current, verified)
+   GB55034-2022 · 3.2.3
+   ...each chip opens the exact source paragraph
+```
+
+```
+Q: 火星量子计算机维修              (an ungrounded question)
+A: 未检索到相关依据 — refused, no invented content.
+```
+
+**Hazard lifecycle (heavy track):** register → AI dual-agent drafting & independent review → **human issue** (idempotent, links the existing hazard) → rectifying → submit rectification → re-check → closed. Overdue is a derived flag computed per Asia/Shanghai deadline and never overrides the business state.
+
+**Monitor flow:** YOLO snapshot → appears as *pending clue* (never auto-entered) → on-site human confirmation with note → becomes a light-track hazard; or dismissal with reason, logged, no ledger entry.
+
+## ✅ Verified results
+
+All evidence is committed under `artifacts/` — JSON results and screenshots produced by the QA harness, not hand-written claims.
+
+- **81 pytest test cases** across auth, chat context, dashboard, demo reset, E2E, hazard feedback, identity, KB, memory, monitor playback, RAG and DB (`backend/tests/`).
+- **5 end-to-end business scenarios** with persisted evidence (`artifacts/e2e-results.json`), including an induced-rework case executed in an isolated environment with explicitly marked test data.
+- **Per-page browser acceptance** via headless Chrome CDP (`scripts/browser_p1..p6.py`): login/permissions, streaming Q&A, citation lookup, dual-track ledger, snapshot confirm/dismiss, KB version governance — each page has a JSON + screenshot in `artifacts/`.
+- **Helmet detection model** (YOLO11n, two head classes): mAP50 ≈ **0.761**, precision ≈ **0.827**, recall ≈ **0.698** on its historical training validation set — reported in-app with the caveat that this is *not* live-site accuracy.
+- Knowledge base: **76 registered sources / 2,745 retained chunks**, parse and review status tracked per source.
+
+## 🧭 Honest capability boundaries
+
+This project deliberately labels what it is *not*:
+
+- No RTSP / live-stream ingestion — the monitor works on local video files with offline frame-by-frame detection playback ("本地回放" labeled in the UI).
+- Reflective-vest detection is demo data; the vest model is untrained and labeled as such. Dashboard on-site headcount (87) is a demo value, not real access-control data.
+- Helmet head-count is not a person count; detection timestamps differ from recording timestamps.
+- RAG uses hash vectors + BM25 with RRF fusion — complex cross-clause reasoning is intentionally limited rather than improvised.
+- No SMS notifications, no real gate integration, single-project local accounts; production deployment needs account management, TLS and operational backup.
+- The UI, knowledge base and regulation corpus are in Chinese (the domain it targets).
+
+## 📁 Project structure
+
+```
+├── backend/                  FastAPI app: routers, RAG, agents, vision, tests
+│   ├── app/                  API: dashboard, chat, hazards, handle, monitor, kb, security, memory
+│   ├── agents/               Dual-agent handling logic
+│   ├── rag/                  Knowledge ingestion, retrieval, index
+│   ├── vision/               YOLO detector + offline playback cache
+│   └── tests/                81 pytest test cases
+├── frontend/                 Zero-build vanilla JS/CSS/HTML (6 pages)
+├── scripts/                  QA harness (browser CDP), demo seeding, GIF recorder, utilities
+├── construction_safety_rag/  Standalone RAG prototype (graph + original pipeline, kept as baseline)
+├── construction-safety-inspection/  Detection prototype: training scripts, val runs, demo assets
+├── 施工安全RAG知识源/          Raw knowledge sources (regulations, standards, cases)
+├── docs/                     Delivery report, review log, README assets
+└── artifacts/                Machine-generated QA evidence (JSON/XML/screenshots)
+```
+
+## 🗺️ Roadmap
+
+- [ ] RTSP / live-stream ingestion for real-time monitoring
+- [ ] Train and integrate the reflective-vest detection model
+- [ ] Multi-project & organization accounts
+- [ ] English UI alongside the Chinese domain content
+- [ ] Docker image for one-command deployment
+
+## 🤝 Contributing
+
+Issues and PRs are welcome. Please keep the project's three product rules intact (no invented clauses, no auto-entered hazards, no auto-effective documents) — proposals that change them should be discussed in an issue first.
+
+```bash
+pytest backend/tests -q      # make sure the suite passes before submitting
+```
+
+## 📷 Recording your own demo
+
+`scripts/record_readme_demo.py` drives a headless-Chrome session against an isolated demo database and writes frames to `artifacts/tmp/gif-frames/`; assemble with any GIF encoder. It never touches a production database.
+
+## License
+
+Released under the [MIT License](LICENSE). Demo site footage comes from [Pexels](https://www.pexels.com/) (free to use). Regulation texts remain the property of their respective issuers and are included solely for retrieval demonstration.
+
+---
+
+<div align="center">
+<sub>中文文档：[README_zh-CN.md](README_zh-CN.md)</sub>
+</div>

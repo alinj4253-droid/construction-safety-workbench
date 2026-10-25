@@ -24,3 +24,16 @@ artifacts/git-log.txt
 frontend/monitor-runtime.local.json
 **/node_modules/
 **/.git/
+
+# coursework / defense materials — kept locally, never published
+26专业综合实践 final/
+智能2311-*/
+项目终案_定位模块与答辩故事线.md
+答辩演示初始化与监控优化说明.txt
+Codex提示词.md
+专业综合实践系统融合审查与落地规划.md
+文件夹复审与多Agent协作方案论证_待确认.md
+知识库专项审查与项目定位梳理_V4前置.md
+AI安全助手修复回归说明_*.txt
+AI监控修复与回归说明_*.txt
+隐患办理与台账优化说明_*.txt
