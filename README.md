@@ -187,6 +187,8 @@ Helmet detection runs locally with Ultralytics YOLO11n. Place trained weights at
 pytest backend/tests -q
 ```
 
+81 test cases pass locally. On CI (or a fresh clone without local media), the knowledge base is rebuilt from the tracked sources first and the two tests that need the gitignored local camera clips are skipped — verified before release: fresh clone → seed → rebuild → 79 passed / 2 skipped.
+
 ## 💬 Usage examples
 
 **Grounded Q&A (assistant refuses without grounds):**

@@ -184,6 +184,8 @@ PDF 渲染与 RAR 解包辅助脚本见 `scripts/render_source_pdfs.py`、`scrip
 .venv\Scripts\python.exe -m pytest backend/tests -q
 ```
 
+本地 81 项用例全部通过。CI（或无本地素材的全新克隆）会先从仓库自带知识源重建知识库，两个依赖本地回放视频的用例自动跳过——发布前已实测：全新克隆 → 建库 → 重建 → 79 通过 / 2 跳过。
+
 ## 💬 使用示例
 
 **有据问答（无依据时拒答）：**
