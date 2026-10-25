@@ -82,6 +82,9 @@ def logout(request:Request,user=Depends(current_user)):
 def index():return FileResponse(db.ROOT/'frontend/index.html')
 
 app.mount('/static',StaticFiles(directory=db.ROOT/'frontend'),name='static')
+# videos/ holds optional local runtime assets (gitignored); create it so a fresh
+# clone can start the app — missing clips are reported per camera at runtime.
+(db.ROOT/'videos').mkdir(exist_ok=True)
 app.mount('/videos',StaticFiles(directory=db.ROOT/'videos'),name='videos')
 
 @app.get('/favicon.ico',include_in_schema=False)

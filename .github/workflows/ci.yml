@@ -8,7 +8,7 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
 
@@ -17,13 +17,21 @@ jobs:
           python-version: '3.11'
           cache: pip
 
-      # Runtime + test dependencies only. The vision stack (torch/ultralytics)
-      # is optional at runtime and lazily imported; the failure-path tests only
-      # need OpenCV for video decoding.
+      # Runtime + test dependencies. The vision stack (torch/ultralytics) is
+      # optional at runtime and lazily imported; OpenCV is needed by the
+      # video-decoding failure-path tests, and PyMuPDF/bs4/pypdf parse the
+      # tracked regulation sources when rebuilding the knowledge base.
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install fastapi uvicorn pydantic python-docx pytest httpx numpy pypdf beautifulsoup4 python-multipart openpyxl opencv-python-headless
+          python -m pip install fastapi uvicorn pydantic python-docx pytest httpx numpy pypdf beautifulsoup4 python-multipart openpyxl opencv-python-headless pymupdf
+
+      # Build the knowledge store from the tracked sources so the retrieval
+      # integration tests (grounded citations) run against a real index.
+      - name: Seed database and rebuild knowledge index
+        run: |
+          python -m backend.app.db
+          python -m backend.rag.knowledge
 
       - name: Run test suite
         run: python -m pytest backend/tests -q

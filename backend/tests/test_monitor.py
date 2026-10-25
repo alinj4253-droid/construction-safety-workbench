@@ -1,7 +1,14 @@
+import pytest
 from fastapi.testclient import TestClient
 from backend.app.main import app
 from backend.app import db
 from backend.vision.detector import map_head_classes
+
+# Two failure-path tests drive the real video pipeline and need the gitignored
+# local clips under videos/; skip them (rather than fail) on fresh clones/CI.
+_requires_local_clips=pytest.mark.skipif(
+    not (db.ROOT/'videos'/'cam03_workers.mp4').is_file(),
+    reason='本地回放视频不在 Git 中，需要本地 videos/ 素材')
 
 def test_mapping_does_not_drop_helmet_heads():
     ds=map_head_classes([(0,.92,(0,0,20,20)),(1,.81,(40,0,60,20)),(0,.1,(80,0,90,20))])
@@ -53,6 +60,7 @@ def test_real_demo_statistics_and_latest_frames(tmp_path,monkeypatch):
         assert c.get('/api/monitor/frames/999999').status_code==404
         assert c.get('/api/monitor/snapshots/1/image').status_code==404
 
+@_requires_local_clips
 def test_serial_batch_queue_and_failures(tmp_path,monkeypatch):
     from backend.app import monitor
     monkeypatch.setenv('APP_DB',str(tmp_path/'batch.db'))
@@ -72,6 +80,7 @@ def test_serial_batch_queue_and_failures(tmp_path,monkeypatch):
         assert c.post('/api/monitor/detect',json={'camera_id':'CAM-03'}).status_code==404
         assert c.post('/api/monitor/detect-all',json={}).status_code==404
 
+@_requires_local_clips
 def test_detection_failure_keeps_error_and_no_fake_frames(tmp_path,monkeypatch):
     from backend.vision import detector
     monkeypatch.setenv('APP_DB',str(tmp_path/'failure.db'))
